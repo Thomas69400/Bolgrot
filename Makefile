@@ -1,6 +1,8 @@
 SRC := src
 UV := uv
 
+all: run
+
 install:
 	$(UV) sync
 

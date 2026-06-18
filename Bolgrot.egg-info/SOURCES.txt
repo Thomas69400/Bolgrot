@@ -5,3 +5,11 @@ Bolgrot.egg-info/dependency_links.txt
 Bolgrot.egg-info/requires.txt
 Bolgrot.egg-info/top_level.txt
 src/__main__.py
+src/constant.py
+src/entity/__init__.py
+src/entity/bolgrot.py
+src/entity/entity.py
+src/entity/flame.py
+src/entity/player.py
+src/map/__init__.py
+src/map/map.py
