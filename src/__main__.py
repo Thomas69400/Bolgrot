@@ -7,7 +7,8 @@ def draw_case(
         x: int,
         y: int,
         color: tuple,
-        screen
+        screen,
+        font=None
 ) -> None:
     iso_x, iso_y = grid_to_iso(x, y)
 
@@ -50,7 +51,7 @@ if __name__ == "__main__":
                                       constant.SCREEN_WIDTH))
     clock = pygame.time.Clock()
     running = True
-
+    font = pygame.font.Font(None, 20)
     map_instance: Map = Map()
 
     while running:
@@ -65,8 +66,9 @@ if __name__ == "__main__":
         if 0 <= gx < constant.GRID_MAX_X and 0 <= gy < constant.GRID_MAX_Y:
             hovered_tile = (gx, gy)
 
-        for x, case in enumerate(map_instance.cases):
-            for y, _ in enumerate(case):
+        for case in map_instance.cases:
+            for k, v in case.items():
+                x, y = k
                 if ((y % 2 == 0 and x % 2 == 0) or
                    (y % 2 == 1 and x % 2 == 1)):
                     color = constant.CASE_COLOR_1
@@ -77,7 +79,7 @@ if __name__ == "__main__":
                     g += 50
                     b += 50
                     color = (r, g, b)
-                draw_case(x, y, color, screen)
+                draw_case(x, y, color, screen, font)
 
         pygame.display.flip()
 
