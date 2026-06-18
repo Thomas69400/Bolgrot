@@ -1,0 +1,7 @@
+pyproject.toml
+Bolgrot.egg-info/PKG-INFO
+Bolgrot.egg-info/SOURCES.txt
+Bolgrot.egg-info/dependency_links.txt
+Bolgrot.egg-info/requires.txt
+Bolgrot.egg-info/top_level.txt
+src/__main__.py
