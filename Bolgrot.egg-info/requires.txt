@@ -1,5 +1,0 @@
-pydantic>=2.0
-pygame
-
-[dev]
-pytest>=7.0

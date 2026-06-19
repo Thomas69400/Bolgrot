@@ -170,10 +170,12 @@ if __name__ == "__main__":
     pygame.time.set_timer(timer, 1000)
 
     map_instance: Map = Map()
+    player: Player = map_instance.player
+
     patterns_instance: Patterns = Patterns()
     r_int: int = random.randint(0, len(patterns_instance.spawn_patterns) - 1)
     spawn_pattern = patterns_instance.spawn_patterns[r_int]
-    map_instance.place_entities(spawn_pattern)
+    map_instance.place_flames(spawn_pattern)
 
     while running:
         screen.fill((0, 0, 0))

@@ -9,13 +9,15 @@ class Map:
         self.cases: list[dict[tuple[int, int], int | Entity]] = [
             {(i, j): 0} for j in range(constant.GRID_MAX_Y)
             for i in range(constant.GRID_MAX_X)]
+        self.player: Player = Player(16, 15)
+        self.bolgrot: Bolgrot = Bolgrot(21, 10)
         for i, case in enumerate(self.cases):
             for k, v in case.items():
                 x, y = k
                 if x == 21 and y == 10:
-                    self.cases[i].update({k: Bolgrot(x, y)})
+                    self.cases[i].update({k: self.bolgrot})
                 elif x == 16 and y == 15:
-                    self.cases[i].update({k: Player(x, y)})
+                    self.cases[i].update({k: self.player})
         self.cut_map()
         self.clean_map()
 
@@ -90,7 +92,7 @@ class Map:
         self.remove_bottom()
         self.remove_extra()
 
-    def place_entities(
+    def place_flames(
             self,
             pattern: list[list[tuple[int, int]]]
     ) -> None:
