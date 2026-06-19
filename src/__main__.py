@@ -13,7 +13,7 @@ def draw_case(
     iso_x, iso_y = grid_to_iso(x, y)
 
     cx = iso_x + screen.get_width() // 2
-    cy = iso_y + screen.get_height() // 2
+    cy = iso_y + screen.get_height() // 4
 
     top = (cx, cy - constant.CASE_HEIGHT / 2)
     right = (cx + constant.CASE_WIDTH / 2, cy)
@@ -37,7 +37,7 @@ def screen_to_grid(
 ) -> tuple[int, int]:
 
     x = screen_x - screen.get_width() // 2
-    y = screen_y - screen.get_height() // 2
+    y = screen_y - screen.get_height() // 4
 
     gx = (y / (constant.CASE_HEIGHT / 2) + x / (constant.CASE_WIDTH / 2)) / 2
     gy = (y / (constant.CASE_HEIGHT / 2) - x / (constant.CASE_WIDTH / 2)) / 2
@@ -51,7 +51,6 @@ if __name__ == "__main__":
                                       constant.SCREEN_WIDTH))
     clock = pygame.time.Clock()
     running = True
-    font = pygame.font.Font(None, 20)
     map_instance: Map = Map()
 
     while running:
@@ -79,7 +78,7 @@ if __name__ == "__main__":
                     g += 50
                     b += 50
                     color = (r, g, b)
-                draw_case(x, y, color, screen, font)
+                draw_case(x, y, color, screen)
 
         pygame.display.flip()
 
