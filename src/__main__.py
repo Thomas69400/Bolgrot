@@ -1,6 +1,9 @@
 import pygame
 from .map import Map
+from .entity import TypeEntity, Player
+from .patterns import Patterns
 from . import constant
+import random
 
 
 def draw_case(
@@ -20,6 +23,13 @@ def draw_case(
     bottom = (cx, cy + constant.CASE_HEIGHT / 2)
     left = (cx - constant.CASE_WIDTH / 2, cy)
     pygame.draw.polygon(screen, color, [top, right, bottom, left])
+
+    if font:
+        text = font.render(f"{x},{y}", True, (0, 0, 0))
+        text_rect = text.get_rect(center=(cx, cy))
+        print(text_rect)
+        screen.blit(text, text_rect)
+
     pygame.draw.polygon(screen, (0, 0, 0), [top, right, bottom, left], 1)
 
 
@@ -30,7 +40,7 @@ def grid_to_iso(x: int, y: int) -> tuple[int, int]:
     return int(nx), int(ny)
 
 
-def screen_to_grid(
+def hover_tile(
     screen_x: int,
     screen_y: int,
     screen
@@ -45,43 +55,165 @@ def screen_to_grid(
     return round(gx), round(gy)
 
 
+def draw_entities(
+        cases,
+        screen
+):
+    for case in cases:
+        for k, v in case.items():
+            if v == 0:
+                continue
+            x, y = k
+            iso_x, iso_y = grid_to_iso(x, y)
+            cx = iso_x + screen.get_width() // 2
+            cy = iso_y + screen.get_height() // 4
+            match v.type_entity:
+                case TypeEntity.PLAYER:
+                    pygame.draw.circle(screen, [0, 0, 255], (cx, cy), 15)
+                case TypeEntity.BOLGROT:
+                    pygame.draw.circle(screen, [0, 255, 0], (cx, cy), 15)
+                case TypeEntity.FLAME:
+                    pygame.draw.circle(screen, [255, 0, 0], (cx, cy), 15)
+
+
+def draw_end_turn_button(
+        screen,
+        font,
+        color=None
+):
+    if color is None:
+        color = [123, 161, 58]
+    x = screen.get_width() - 600
+    y = screen.get_height() - 600
+    pygame.draw.rect(screen, color, [x, y, 300, 100])
+    text = font.render("End turn", True, (0, 0, 0))
+    screen.blit(text, (x + 75, y + 30))
+
+
+def draw_timer(
+        screen,
+        timer_text
+):
+    x = screen.get_width() - 550
+    y = screen.get_height() - 480
+    screen.blit(timer_text, (x + 50, y))
+
+
+def make_case(
+        screen,
+        mouse_x,
+        mouse_y,
+        cases,
+) -> None:
+    gx, gy = hover_tile(mouse_x, mouse_y, screen)
+
+    hovered_tile = None
+    if 0 <= gx < constant.GRID_MAX_X and 0 <= gy < constant.GRID_MAX_Y:
+        hovered_tile = (gx, gy)
+
+    for case in cases:
+        for k, v in case.items():
+            x, y = k
+            if ((y % 2 == 0 and x % 2 == 0) or
+               (y % 2 == 1 and x % 2 == 1)):
+                color = constant.CASE_COLOR_1
+            else:
+                color = constant.CASE_COLOR_2
+            if hovered_tile and hovered_tile == (x, y):
+                r, g, b = color
+                g += 50
+                b += 50
+                color = (r, g, b)
+            draw_case(x, y, color, screen)
+
+
+def make_button_turn(
+        screen,
+        mouse_x,
+        mouse_y
+) -> None:
+    hovered_button = None
+    bx, by = screen.get_width() - 600, screen.get_height() - 600
+    if bx <= mouse_x < bx + 300 and by <= mouse_y < by + 100:
+        hovered_button = (bx, by)
+    color_button = None
+    if hovered_button:
+        color_button = [123 - 50, 161, 58 + 50]
+    draw_end_turn_button(screen, font_txt, color_button)
+
+
+def play_next_turn():
+    pass
+
+
+def on_button_end_turn(
+        mouse_x,
+        mouse_y,
+):
+    bx, by = screen.get_width() - 600, screen.get_height() - 600
+    return bx <= mouse_x < bx + 300 and by <= mouse_y < by + 100
+
+
 if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode((constant.SCREEN_HEIGHT,
                                       constant.SCREEN_WIDTH))
     clock = pygame.time.Clock()
     running = True
+
+    font = pygame.font.Font(None, 20)
+    font_txt = pygame.font.Font(None, 50)
+
+    timer = pygame.USEREVENT + 1
+    timer_sec = constant.TIME_TURN
+    timer_text = font_txt.render("02:00", True, (255, 255, 255))
+    pygame.time.set_timer(timer, 1000)
+
     map_instance: Map = Map()
+    patterns_instance: Patterns = Patterns()
+    r_int: int = random.randint(0, len(patterns_instance.spawn_patterns) - 1)
+    spawn_pattern = patterns_instance.spawn_patterns[r_int]
+    map_instance.place_entities(spawn_pattern)
 
     while running:
+        screen.fill((0, 0, 0))
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        next_turn: int = 0
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        gx, gy = screen_to_grid(mouse_x, mouse_y, screen)
-
-        hovered_tile = None
-        if 0 <= gx < constant.GRID_MAX_X and 0 <= gy < constant.GRID_MAX_Y:
-            hovered_tile = (gx, gy)
-
-        for case in map_instance.cases:
-            for k, v in case.items():
-                x, y = k
-                if ((y % 2 == 0 and x % 2 == 0) or
-                   (y % 2 == 1 and x % 2 == 1)):
-                    color = constant.CASE_COLOR_1
+            if event.type == timer:
+                if timer_sec > 0:
+                    timer_sec -= 1
+                    if timer_sec >= 60:
+                        time_str = "01:%02d" % (timer_sec - 60)
+                    else:
+                        time_str = "00:%02d" % timer_sec
+                    timer_text = font_txt.render(
+                        time_str, True, (255, 255, 255))
                 else:
-                    color = constant.CASE_COLOR_2
-                if hovered_tile and hovered_tile == (x, y):
-                    r, g, b = color
-                    g += 50
-                    b += 50
-                    color = (r, g, b)
-                draw_case(x, y, color, screen)
+                    pygame.time.set_timer(timer, 1000)
+                    timer_sec = constant.TIME_TURN
+                    next_turn = 1
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if on_button_end_turn(mouse_x, mouse_y):
+                        next_turn = 1
+
+        if next_turn:
+            timer_sec = constant.TIME_TURN
+            play_next_turn()
+
+        make_case(screen, mouse_x, mouse_y, map_instance.cases)
+        draw_entities(map_instance.cases, screen)
+        make_button_turn(screen, mouse_x, mouse_y)
+        draw_timer(screen, timer_text)
+
+        pygame.display.update()
         pygame.display.flip()
-
         clock.tick(60)
 
     pygame.quit()

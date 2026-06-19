@@ -1,4 +1,4 @@
-from ..entity import TypeEntity
+from ..entity import Bolgrot, Player, Flame, Entity
 from .. import constant
 
 
@@ -6,19 +6,28 @@ class Map:
     def __init__(
             self
     ):
-        self.cases: list[dict[tuple[int, int], int]] = [
+        self.cases: list[dict[tuple[int, int], int | Entity]] = [
             {(i, j): 0} for j in range(constant.GRID_MAX_Y)
             for i in range(constant.GRID_MAX_X)]
         for i, case in enumerate(self.cases):
             for k, v in case.items():
                 x, y = k
-                if x == 17 and y == constant.GRID_MAX_Y - 4:
-                    self.cases[i].update({k: TypeEntity.BOLGROT})
-                elif x == 17 and y == 15:
-                    self.cases[i].update({k: TypeEntity.PLAYER})
+                if x == 21 and y == 10:
+                    self.cases[i].update({k: Bolgrot(x, y)})
+                elif x == 16 and y == 15:
+                    self.cases[i].update({k: Player(x, y)})
         self.cut_map()
+        self.clean_map()
 
-    def cpy_cases(self) -> list[dict[tuple[int, int], int]]:
+    def clean_map(self):
+        cpy: list[dict[tuple[int, int], int | Entity]] = []
+        for case in self.cases:
+            for k, v in case.items():
+                x, y = k
+                cpy.append({(x - 1, y - 2): v})
+        self.cases = cpy
+
+    def cpy_cases(self) -> list[dict[tuple[int, int], int | Entity]]:
         new_cases: list[dict[tuple[int, int], int]] = []
         for case in self.cases:
             new_cases.append(case.copy())
@@ -80,3 +89,14 @@ class Map:
         self.remove_right()
         self.remove_bottom()
         self.remove_extra()
+
+    def place_entities(
+            self,
+            pattern: list[list[tuple[int, int]]]
+    ) -> None:
+        for p in pattern:
+            for i, case in enumerate(self.cases):
+                for k, v in case.items():
+                    if k == p:
+                        x, y = k
+                        self.cases[i].update({k: Flame(x, y)})
