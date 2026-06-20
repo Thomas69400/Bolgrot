@@ -21,5 +21,8 @@ class MoveFlames(Spells):
     def play(self):
         pass
 
+    def previsu(self):
+        pass
+
     def next_turn(self):
         self.time_used = 0

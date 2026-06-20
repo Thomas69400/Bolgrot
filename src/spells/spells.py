@@ -1,4 +1,19 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+
+
+class Direction(Enum):
+    NORTH: tuple = (-1, 0)
+    EAST: tuple = (0, 1)
+    SOUTH: tuple = (1, 0)
+    WEST: tuple = (0, -1)
+
+    DIRECTIONS: list[tuple] = [
+        NORTH,
+        EAST,
+        SOUTH,
+        WEST
+    ]
 
 
 class Spells(ABC):
@@ -22,3 +37,18 @@ class Spells(ABC):
     @abstractmethod
     def play(self):
         pass
+
+    @abstractmethod
+    def previsu(self):
+        pass
+
+    @staticmethod
+    def is_in_map(
+        pos_spell: tuple,
+        cases: list[dict[tuple, int]],
+    ) -> bool:
+        for c in cases:
+            for k, v in c.items():
+                if k == pos_spell:
+                    return True
+        return False

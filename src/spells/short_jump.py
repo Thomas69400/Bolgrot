@@ -1,4 +1,4 @@
-from .spells import Spells
+from .spells import Spells, Direction
 
 
 class ShortJump(Spells):
@@ -28,3 +28,20 @@ class ShortJump(Spells):
 
     def play(self):
         pass
+
+    def previsu(
+            self,
+            pos_player: tuple[int, int],
+            cases: list
+    ) -> list[tuple]:
+        x, y = pos_player
+        possible_pos: list[tuple] = []
+        try:
+            for direction in Direction.DIRECTIONS.value:
+                dx, dy = direction
+                nx, ny = x + dx, y + dy
+                if self.is_in_map((nx, ny), cases):
+                    possible_pos.append((nx, ny))
+            return possible_pos
+        except Exception:
+            return []

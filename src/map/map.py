@@ -9,17 +9,19 @@ class Map:
         self.cases: list[dict[tuple[int, int], int | Entity]] = [
             {(i, j): 0} for j in range(constant.GRID_MAX_Y)
             for i in range(constant.GRID_MAX_X)]
-        self.player: Player = Player(16, 15)
-        self.bolgrot: Bolgrot = Bolgrot(21, 10)
+        base_x_b, base_y_b = constant.BASE_BOLGROT_POS
+        base_x_p, base_y_p = constant.BASE_PLAYER_POS
+        self.player: Player = Player(base_x_p, base_y_p)
+        self.bolgrot: Bolgrot = Bolgrot(base_x_b, base_y_b)
+        self.cut_map()
+        self.clean_map()
         for i, case in enumerate(self.cases):
             for k, v in case.items():
                 x, y = k
-                if x == 21 and y == 10:
+                if x == base_x_b and y == base_y_b:
                     self.cases[i].update({k: self.bolgrot})
-                elif x == 16 and y == 15:
+                elif x == base_x_p and y == base_y_p:
                     self.cases[i].update({k: self.player})
-        self.cut_map()
-        self.clean_map()
 
     def clean_map(self):
         cpy: list[dict[tuple[int, int], int | Entity]] = []

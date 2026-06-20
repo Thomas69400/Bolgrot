@@ -29,7 +29,6 @@ def draw_case(
     if font:
         text = font.render(f"{x},{y}", True, (0, 0, 0))
         text_rect = text.get_rect(center=(cx, cy))
-        print(text_rect)
         screen.blit(text, text_rect)
 
     pygame.draw.polygon(screen, (0, 0, 0), [top, right, bottom, left], 1)
@@ -109,7 +108,9 @@ def make_case(
         mouse_x: int,
         mouse_y: int,
         cases: list[dict[tuple[int, int], int | Entity]],
+        previsualiation: list[tuple],
         spawn_pattern: list[tuple],
+        font_txt: pygame.font.Font = None
 ) -> None:
     gx, gy = hover_tile(screen, mouse_x, mouse_y)
 
@@ -120,7 +121,9 @@ def make_case(
     for case in cases:
         for k, v in case.items():
             x, y = k
-            if (x, y) in spawn_pattern:
+            if (x, y) in previsualiation:
+                color = constant.PREVISU_COLO
+            elif (x, y) in spawn_pattern:
                 color = constant.SPAWN_COLOR_1
             elif ((y % 2 == 0 and x % 2 == 0) or
                   (y % 2 == 1 and x % 2 == 1)):
@@ -132,7 +135,7 @@ def make_case(
                 g += 50
                 b += 50
                 color = (r, g, b)
-            draw_case(screen, x, y, color)
+            draw_case(screen, x, y, color, font_txt)
 
 
 def make_button_turn(
@@ -259,10 +262,10 @@ def on_spell(
         screen: pygame.Surface,
         mouse_x: int,
         mouse_y: int,
-        n_spells: int,
+        spells: list[Spells],
         images: list[pygame.Surface],
-) -> bool:
-    pos_x: int = screen.get_width() / 2 - (n_spells - 1 * 60)
+) -> tuple[bool, None | Spells]:
+    pos_x: int = screen.get_width() / 2 - (len(spells) - 1 * 60)
     pos_y: int = screen.get_height() - 500
     for len_i, i in enumerate(images):
         width: int = i.get_width()
@@ -272,8 +275,8 @@ def on_spell(
         start_y: int = pos_y
         if (start_x <= mouse_x < start_x + (width)
                 and start_y <= mouse_y < start_y + heigth):
-            return True
-    return False
+            return True, spells[len_i]
+    return False, None
 
 
 if __name__ == "__main__":
@@ -298,6 +301,7 @@ if __name__ == "__main__":
     patterns_instance: Patterns = Patterns()
     spawn_pattern: list[tuple] | None = get_random_spawn_pattern(
         patterns_instance)
+    previsualiation: list[tuple] | None = []
     images: list[pygame.Surface] = []
 
     while running:
@@ -327,21 +331,28 @@ if __name__ == "__main__":
                 if event.button == 1:
                     if on_button_end_turn(screen, mouse_x, mouse_y):
                         next_turn = 1
-                    if on_spell(screen, mouse_x, mouse_y,
-                                len(player.spells), images):
-                        spell = get_spell(mouse_x, mouse_y)
+                    is_spell, spell = on_spell(screen, mouse_x, mouse_y,
+                                               player.spells, images)
+                    if is_spell:
+                        previsualiation: list[tuple] = spell.previsu((
+                            player.pos_x, player.pos_y), map_instance.cases)
+                        if len(previsualiation) > 0:
+                            spell.play()
+                    else:
+                        previsualiation = []
 
         if next_turn:
             timer_sec = constant.TIME_TURN
             spawn_pattern = play_next_turn(
                 map_instance, patterns_instance, spawn_pattern)
 
-        make_case(screen, mouse_x, mouse_y, map_instance.cases, spawn_pattern)
+        make_case(screen, mouse_x, mouse_y,
+                  map_instance.cases, previsualiation, spawn_pattern, font_txt)
         draw_entities(screen, map_instance.cases)
         make_button_turn(screen, mouse_x, mouse_y, font_title)
         draw_timer(screen, timer_text)
         images = draw_spells(screen, mouse_x, mouse_y,
-                    player.spells, font_title, font_txt)
+                             player.spells, font_title, font_txt)
 
         pygame.display.update()
         pygame.display.flip()
