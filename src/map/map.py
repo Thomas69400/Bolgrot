@@ -41,14 +41,20 @@ class Map:
         for y in range(constant.GRID_MAX_Y - 1, constant.GRID_MAX_Y - 20, -1):
             i += 1
             for x in range(20 - i):
-                cpy.remove({(x, y): 0})
+                try:
+                    cpy.remove({(x, y): 0})
+                except Exception:
+                    continue
         self.cases = cpy
 
     def remove_top(self) -> None:
         cpy: list[dict[tuple[int, int], int]] = self.cpy_cases()
         for x in range(14):
             for y in range(14 - x):
-                cpy.remove({(x, y): 0})
+                try:
+                    cpy.remove({(x, y): 0})
+                except Exception:
+                    continue
         self.cases = cpy
 
     def remove_right(self) -> None:
@@ -57,7 +63,10 @@ class Map:
         for x in range(constant.GRID_MAX_X - 1, 14, -1):
             i += 1
             for y in range(0, 24 - i):
-                cpy.remove({(x, y): 0})
+                try:
+                    cpy.remove({(x, y): 0})
+                except Exception:
+                    continue
         self.cases = cpy
 
     def remove_bottom(self) -> None:

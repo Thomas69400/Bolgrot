@@ -1,17 +1,17 @@
 import pygame
 from .map import Map
-from .entity import TypeEntity, Player
+from .entity import TypeEntity, Player, Entity
 from .patterns import Patterns
 from . import constant
 import random
 
 
 def draw_case(
+        screen: pygame.Surface,
         x: int,
         y: int,
         color: tuple,
-        screen,
-        font=None
+        font: pygame.font.Font = None
 ) -> None:
     iso_x, iso_y = grid_to_iso(x, y)
 
@@ -33,7 +33,10 @@ def draw_case(
     pygame.draw.polygon(screen, (0, 0, 0), [top, right, bottom, left], 1)
 
 
-def grid_to_iso(x: int, y: int) -> tuple[int, int]:
+def grid_to_iso(
+        x: int,
+        y: int
+) -> tuple[int, int]:
     nx = (x - y) * (constant.CASE_WIDTH / 2)
     ny = (x + y) * (constant.CASE_HEIGHT / 2)
 
@@ -41,9 +44,9 @@ def grid_to_iso(x: int, y: int) -> tuple[int, int]:
 
 
 def hover_tile(
+    screen: pygame.Surface,
     screen_x: int,
     screen_y: int,
-    screen
 ) -> tuple[int, int]:
 
     x = screen_x - screen.get_width() // 2
@@ -56,8 +59,8 @@ def hover_tile(
 
 
 def draw_entities(
-        cases,
-        screen
+        screen: pygame.Surface,
+        cases: list[dict[tuple[int, int], int | Entity]],
 ):
     for case in cases:
         for k, v in case.items():
@@ -77,9 +80,9 @@ def draw_entities(
 
 
 def draw_end_turn_button(
-        screen,
-        font,
-        color=None
+        screen: pygame.Surface,
+        font: pygame.font.Font,
+        color: list[int] = None
 ):
     if color is None:
         color = [123, 161, 58]
@@ -91,7 +94,7 @@ def draw_end_turn_button(
 
 
 def draw_timer(
-        screen,
+        screen: pygame.Surface,
         timer_text
 ):
     x = screen.get_width() - 550
@@ -100,12 +103,13 @@ def draw_timer(
 
 
 def make_case(
-        screen,
-        mouse_x,
-        mouse_y,
-        cases,
+        screen: pygame.Surface,
+        mouse_x: int,
+        mouse_y: int,
+        cases: list[dict[tuple[int, int], int | Entity]],
+        spawn_pattern: list[tuple],
 ) -> None:
-    gx, gy = hover_tile(mouse_x, mouse_y, screen)
+    gx, gy = hover_tile(screen, mouse_x, mouse_y)
 
     hovered_tile = None
     if 0 <= gx < constant.GRID_MAX_X and 0 <= gy < constant.GRID_MAX_Y:
@@ -114,8 +118,10 @@ def make_case(
     for case in cases:
         for k, v in case.items():
             x, y = k
-            if ((y % 2 == 0 and x % 2 == 0) or
-               (y % 2 == 1 and x % 2 == 1)):
+            if (x, y) in spawn_pattern:
+                color = constant.SPAWN_COLOR_1
+            elif ((y % 2 == 0 and x % 2 == 0) or
+                  (y % 2 == 1 and x % 2 == 1)):
                 color = constant.CASE_COLOR_1
             else:
                 color = constant.CASE_COLOR_2
@@ -124,13 +130,13 @@ def make_case(
                 g += 50
                 b += 50
                 color = (r, g, b)
-            draw_case(x, y, color, screen)
+            draw_case(screen, x, y, color)
 
 
 def make_button_turn(
-        screen,
-        mouse_x,
-        mouse_y
+        screen: pygame.Surface,
+        mouse_x: int,
+        mouse_y: int
 ) -> None:
     hovered_button = None
     bx, by = screen.get_width() - 600, screen.get_height() - 600
@@ -142,13 +148,30 @@ def make_button_turn(
     draw_end_turn_button(screen, font_txt, color_button)
 
 
-def play_next_turn():
-    pass
+def get_random_spawn_pattern(
+        patterns_instance: Patterns
+) -> list[tuple]:
+    try:
+        r_int: int = random.randint(0, len(patterns_instance.spawn_patterns) - 1)
+        spawn_pattern: list[tuple] = patterns_instance.spawn_patterns[r_int]
+        patterns_instance.spawn_patterns.remove(spawn_pattern)
+        return spawn_pattern
+    except Exception:
+        return []
+
+
+def play_next_turn(
+        map_instance: Map,
+        patterns_instance: Patterns,
+        spawn_pattern: list[tuple]
+) -> list[tuple]:
+    map_instance.place_flames(spawn_pattern)
+    return get_random_spawn_pattern(patterns_instance)
 
 
 def on_button_end_turn(
-        mouse_x,
-        mouse_y,
+        mouse_x: int,
+        mouse_y: int,
 ):
     bx, by = screen.get_width() - 600, screen.get_height() - 600
     return bx <= mouse_x < bx + 300 and by <= mouse_y < by + 100
@@ -156,26 +179,25 @@ def on_button_end_turn(
 
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((constant.SCREEN_HEIGHT,
-                                      constant.SCREEN_WIDTH))
-    clock = pygame.time.Clock()
-    running = True
+    screen: pygame.Surface = pygame.display.set_mode(
+        (constant.SCREEN_HEIGHT, constant.SCREEN_WIDTH))
+    clock: pygame.time.Clock = pygame.time.Clock()
+    running: bool = True
 
-    font = pygame.font.Font(None, 20)
-    font_txt = pygame.font.Font(None, 50)
+    font: pygame.font.Font = pygame.font.Font(None, 20)
+    font_txt: pygame.font.Font = pygame.font.Font(None, 50)
 
-    timer = pygame.USEREVENT + 1
-    timer_sec = constant.TIME_TURN
-    timer_text = font_txt.render("02:00", True, (255, 255, 255))
+    timer: int = pygame.USEREVENT + 1
+    timer_sec: int = constant.TIME_TURN
+    timer_text: pygame.Surface = font_txt.render(
+        "02:00", True, (255, 255, 255))
     pygame.time.set_timer(timer, 1000)
 
     map_instance: Map = Map()
     player: Player = map_instance.player
-
     patterns_instance: Patterns = Patterns()
-    r_int: int = random.randint(0, len(patterns_instance.spawn_patterns) - 1)
-    spawn_pattern = patterns_instance.spawn_patterns[r_int]
-    map_instance.place_flames(spawn_pattern)
+    spawn_pattern: list[tuple] | None = get_random_spawn_pattern(
+        patterns_instance)
 
     while running:
         screen.fill((0, 0, 0))
@@ -207,10 +229,11 @@ if __name__ == "__main__":
 
         if next_turn:
             timer_sec = constant.TIME_TURN
-            play_next_turn()
+            spawn_pattern = play_next_turn(
+                map_instance, patterns_instance, spawn_pattern)
 
-        make_case(screen, mouse_x, mouse_y, map_instance.cases)
-        draw_entities(map_instance.cases, screen)
+        make_case(screen, mouse_x, mouse_y, map_instance.cases, spawn_pattern)
+        draw_entities(screen, map_instance.cases)
         make_button_turn(screen, mouse_x, mouse_y)
         draw_timer(screen, timer_text)
 
