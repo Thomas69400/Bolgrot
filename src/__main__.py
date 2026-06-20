@@ -173,9 +173,10 @@ def play_next_turn(
 
 
 def on_button_end_turn(
+        screen: pygame.Surface,
         mouse_x: int,
         mouse_y: int,
-):
+) -> bool:
     bx, by = screen.get_width() - 600, screen.get_height() - 600
     return bx <= mouse_x < bx + 300 and by <= mouse_y < by + 100
 
@@ -227,7 +228,7 @@ def draw_spells(
         spells: list[Spells],
         font_title: pygame.font.Font,
         font_txt: pygame.font.Font,
-) -> None:
+) -> list[pygame.Surface]:
     images: list[pygame.Surface] = []
     pos_x: int = screen.get_width() / 2 - (len(spells) - 1 * 60)
     pos_y: int = screen.get_height() - 500
@@ -251,6 +252,28 @@ def draw_spells(
             show_spell_data(screen, s, start_x, start_y, font_title, font_txt)
 
         screen.blit(images[-1], (start_x, start_y))
+    return images
+
+
+def on_spell(
+        screen: pygame.Surface,
+        mouse_x: int,
+        mouse_y: int,
+        n_spells: int,
+        images: list[pygame.Surface],
+) -> bool:
+    pos_x: int = screen.get_width() / 2 - (n_spells - 1 * 60)
+    pos_y: int = screen.get_height() - 500
+    for len_i, i in enumerate(images):
+        width: int = i.get_width()
+        heigth: int = i.get_height()
+
+        start_x: int = pos_x + (width + 10) * len_i
+        start_y: int = pos_y
+        if (start_x <= mouse_x < start_x + (width)
+                and start_y <= mouse_y < start_y + heigth):
+            return True
+    return False
 
 
 if __name__ == "__main__":
@@ -275,6 +298,7 @@ if __name__ == "__main__":
     patterns_instance: Patterns = Patterns()
     spawn_pattern: list[tuple] | None = get_random_spawn_pattern(
         patterns_instance)
+    images: list[pygame.Surface] = []
 
     while running:
         screen.fill((0, 0, 0))
@@ -301,8 +325,11 @@ if __name__ == "__main__":
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if on_button_end_turn(mouse_x, mouse_y):
+                    if on_button_end_turn(screen, mouse_x, mouse_y):
                         next_turn = 1
+                    if on_spell(screen, mouse_x, mouse_y,
+                                len(player.spells), images):
+                        spell = get_spell(mouse_x, mouse_y)
 
         if next_turn:
             timer_sec = constant.TIME_TURN
@@ -313,7 +340,7 @@ if __name__ == "__main__":
         draw_entities(screen, map_instance.cases)
         make_button_turn(screen, mouse_x, mouse_y, font_title)
         draw_timer(screen, timer_text)
-        draw_spells(screen, mouse_x, mouse_y,
+        images = draw_spells(screen, mouse_x, mouse_y,
                     player.spells, font_title, font_txt)
 
         pygame.display.update()
