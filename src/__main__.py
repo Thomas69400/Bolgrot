@@ -4,6 +4,8 @@ from .entity import TypeEntity, Player, Entity
 from .patterns import Patterns
 from . import constant
 import random
+from .spells import Spells
+import os
 
 
 def draw_case(
@@ -136,7 +138,8 @@ def make_case(
 def make_button_turn(
         screen: pygame.Surface,
         mouse_x: int,
-        mouse_y: int
+        mouse_y: int,
+        font_title: pygame.font.Font
 ) -> None:
     hovered_button = None
     bx, by = screen.get_width() - 600, screen.get_height() - 600
@@ -145,7 +148,7 @@ def make_button_turn(
     color_button = None
     if hovered_button:
         color_button = [123 - 50, 161, 58 + 50]
-    draw_end_turn_button(screen, font_txt, color_button)
+    draw_end_turn_button(screen, font_title, color_button)
 
 
 def get_random_spawn_pattern(
@@ -177,6 +180,79 @@ def on_button_end_turn(
     return bx <= mouse_x < bx + 300 and by <= mouse_y < by + 100
 
 
+def show_spell_data(
+        screen: pygame.Surface,
+        spell: Spells,
+        pos_x: int,
+        pos_y: int,
+        font_title: pygame.font.Font,
+        font_txt: pygame.font.Font
+) -> None:
+    width_rect = 400
+    height_rect = 500
+    pygame.draw.rect(
+        screen,
+        constant.BACKGROUND_POPUP,
+        [pos_x, pos_y - height_rect, width_rect, height_rect])
+    name_txt: pygame.Surface = font_title.render(
+        f"{spell.name}", True, (255, 255, 255))
+    cost_txt: pygame.Surface = font_txt.render(
+        f"Cost: {spell.cost} AP", True, (255, 255, 255))
+    effects_txt: list[pygame.Surface] = []
+    desc_lines: list[str] = spell.description.split(".")
+    desc_txt: list[pygame.Surface] = []
+    for d in desc_lines:
+        desc_txt.append(font_txt.render(
+            f"{d}", True, (255, 255, 255)
+        ))
+    for e in spell.effects:
+        effects_txt.append(font_txt.render(f"{e}", True, (255, 255, 255)))
+
+    screen.blit(name_txt, (pos_x, pos_y - height_rect))
+    screen.blit(cost_txt, (pos_x, pos_y - height_rect + 50))
+    for i, e in enumerate(effects_txt):
+        screen.blit(e,
+                    (pos_x,
+                     (pos_y - height_rect + 100) + font_txt.get_height() * i))
+    for i, d in enumerate(desc_txt):
+        screen.blit(d,
+                    (pos_x,
+                     (pos_y - height_rect + 200) + font_txt.get_height() * i))
+
+
+def draw_spells(
+        screen: pygame.Surface,
+        mouse_x: int,
+        mouse_y: int,
+        spells: list[Spells],
+        font_title: pygame.font.Font,
+        font_txt: pygame.font.Font,
+) -> None:
+    images: list[pygame.Surface] = []
+    pos_x: int = screen.get_width() / 2 - (len(spells) - 1 * 60)
+    pos_y: int = screen.get_height() - 500
+
+    for i, s in enumerate(spells):
+        images.append(
+            pygame.image.load(
+                os.path.join("./src/sprites_png", s.sprite)))
+
+        hover_spell: None | tuple[int, int] = None
+        img_width: int = images[-1].get_width()
+        img_height: int = images[-1].get_height()
+        start_x: int = pos_x + (img_width + 10) * i
+        start_y: int = pos_y
+
+        if (start_x <= mouse_x < start_x + (img_width)
+                and start_y <= mouse_y < start_y + img_height):
+            hover_spell = (mouse_x, mouse_y)
+
+        if hover_spell:
+            show_spell_data(screen, s, start_x, start_y, font_title, font_txt)
+
+        screen.blit(images[-1], (start_x, start_y))
+
+
 if __name__ == "__main__":
     pygame.init()
     screen: pygame.Surface = pygame.display.set_mode(
@@ -185,11 +261,12 @@ if __name__ == "__main__":
     running: bool = True
 
     font: pygame.font.Font = pygame.font.Font(None, 20)
-    font_txt: pygame.font.Font = pygame.font.Font(None, 50)
+    font_title: pygame.font.Font = pygame.font.Font(None, 50)
+    font_txt: pygame.font.Font = pygame.font.Font(None, 25)
 
     timer: int = pygame.USEREVENT + 1
     timer_sec: int = constant.TIME_TURN
-    timer_text: pygame.Surface = font_txt.render(
+    timer_text: pygame.Surface = font_title.render(
         "02:00", True, (255, 255, 255))
     pygame.time.set_timer(timer, 1000)
 
@@ -215,7 +292,7 @@ if __name__ == "__main__":
                         time_str = "01:%02d" % (timer_sec - 60)
                     else:
                         time_str = "00:%02d" % timer_sec
-                    timer_text = font_txt.render(
+                    timer_text = font_title.render(
                         time_str, True, (255, 255, 255))
                 else:
                     pygame.time.set_timer(timer, 1000)
@@ -234,8 +311,10 @@ if __name__ == "__main__":
 
         make_case(screen, mouse_x, mouse_y, map_instance.cases, spawn_pattern)
         draw_entities(screen, map_instance.cases)
-        make_button_turn(screen, mouse_x, mouse_y)
+        make_button_turn(screen, mouse_x, mouse_y, font_title)
         draw_timer(screen, timer_text)
+        draw_spells(screen, mouse_x, mouse_y,
+                    player.spells, font_title, font_txt)
 
         pygame.display.update()
         pygame.display.flip()

@@ -9,7 +9,7 @@ class ShortJump(Spells):
             cost: int = 1,
             max_use: int = 99,
             effects: list[str] = [],
-            sprite=None
+            sprite: str = "short_jump.xcf"
     ):
         super().__init__(
             name, description, cost, max_use, effects, sprite)
@@ -23,7 +23,7 @@ class ShortJump(Spells):
             "Can be use on an occupied tile to kill ennemy." \
             "If an ennemy is killed, restore 1 HP." \
             "All ennemies are attracted towards the caster" \
-            "after the teleportation." \
+            " after the teleportation." \
             "If an ennemy can't be moved, you die."
 
     def play(self):

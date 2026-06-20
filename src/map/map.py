@@ -23,11 +23,17 @@ class Map:
 
     def clean_map(self):
         cpy: list[dict[tuple[int, int], int | Entity]] = []
+        x_max: int = 0
+        y_max: int = 0
         for case in self.cases:
             for k, v in case.items():
                 x, y = k
+                x_max = max(x - 1, x_max)
+                y_max = max(y - 2, y_max)
                 cpy.append({(x - 1, y - 2): v})
         self.cases = cpy
+        constant.GRID_MAX_X = x_max
+        constant.GRID_MAX_Y = y_max
 
     def cpy_cases(self) -> list[dict[tuple[int, int], int | Entity]]:
         new_cases: list[dict[tuple[int, int], int]] = []

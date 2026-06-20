@@ -9,13 +9,13 @@ class MoveFlames(Spells):
             cost: int = 1,
             max_use: int = 1,
             effects: list[str] = [],
-            sprite=None
+            sprite: str = "inaction.xcf"
     ):
         super().__init__(
             name, description, cost, max_use, effects, sprite)
-        self.description: str = "Ennemies are attracted on the tile" \
-            "Caster lose 5 HP" \
-            "Ennemies can't kill the caster when using this spell"
+        self.description: str = "Ennemies are attracted on the tile." \
+            "Caster lose 5 HP." \
+            "Ennemies can't kill the caster when using this spell."
         self.time_used: int = 0
 
     def play(self):
