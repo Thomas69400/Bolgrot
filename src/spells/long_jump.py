@@ -1,4 +1,4 @@
-from .spells import Spells
+from .spells import Spells, TypeSpell
 
 
 class LongJump(Spells):
@@ -9,10 +9,13 @@ class LongJump(Spells):
             cost: int = 2,
             max_use: int = 2,
             effects: list[str] = [],
+            type_spell: list[tuple[TypeSpell, int]] = [],
+            line_of_sight: bool = True,
             sprite: str = "long_jump.xcf"
     ):
         super().__init__(
-            name, description, cost, max_use, effects, sprite)
+            name, description, cost, max_use,
+            effects, type_spell, line_of_sight, sprite)
         self.effects: list[str] = [
             "Teleport to the tile",
             "Attract 1 tile",
@@ -26,11 +29,11 @@ class LongJump(Spells):
             " after the teleportation." \
             "If an ennemy can't be moved, you die."
         self.time_used: int = 0
+        self.type_spell: list[tuple[TypeSpell, int]] = [
+            (TypeSpell.LINE, 2)
+        ]
 
     def play(self):
-        pass
-
-    def previsu(self):
         pass
 
     def next_turn(self):

@@ -1,4 +1,6 @@
+# 37
 GRID_MAX_X = 37
+# 34
 GRID_MAX_Y = 34
 
 CASE_HEIGHT = 32

@@ -1,4 +1,4 @@
-from .spells import Spells, Direction
+from .spells import Spells, TypeSpell
 
 
 class ShortJump(Spells):
@@ -9,10 +9,13 @@ class ShortJump(Spells):
             cost: int = 1,
             max_use: int = 99,
             effects: list[str] = [],
+            type_spell: list[tuple[TypeSpell, int]] = [],
+            line_of_sight: bool = True,
             sprite: str = "short_jump.xcf"
     ):
         super().__init__(
-            name, description, cost, max_use, effects, sprite)
+            name, description, cost, max_use,
+            effects, type_spell, line_of_sight, sprite)
         self.effects: list[str] = [
             "Teleport to the tile",
             "Attract 1 tile",
@@ -25,23 +28,9 @@ class ShortJump(Spells):
             "All ennemies are attracted towards the caster" \
             " after the teleportation." \
             "If an ennemy can't be moved, you die."
+        self.type_spell: list[tuple[TypeSpell, int]] = [
+            (TypeSpell.LINE, 1)
+        ]
 
     def play(self):
         pass
-
-    def previsu(
-            self,
-            pos_player: tuple[int, int],
-            cases: list
-    ) -> list[tuple]:
-        x, y = pos_player
-        possible_pos: list[tuple] = []
-        try:
-            for direction in Direction.DIRECTIONS.value:
-                dx, dy = direction
-                nx, ny = x + dx, y + dy
-                if self.is_in_map((nx, ny), cases):
-                    possible_pos.append((nx, ny))
-            return possible_pos
-        except Exception:
-            return []
