@@ -5,6 +5,7 @@ from . import constant
 from .entity import TypeEntity, Entity
 from .spells import Spells
 
+
 def grid_to_iso(x: int, y: int) -> tuple[int, int]:
     nx = (x - y) * (constant.CASE_WIDTH / 2)
     ny = (x + y) * (constant.CASE_HEIGHT / 2)
@@ -100,7 +101,8 @@ def make_case(
         font_txt: pygame.font.Font = None,
 ) -> None:
     gx, gy = hover_tile(mouse_x, mouse_y, offset)
-    hovered = (gx, gy) if 0 <= gx < grid_max_x and 0 <= gy < grid_max_y else None
+    hovered = (gx, gy) if 0 <= gx < grid_max_x and \
+        0 <= gy < grid_max_y else None
 
     for (x, y) in cases:
         if (x, y) in previsualiation:
@@ -126,7 +128,8 @@ def draw_end_turn_button(
 ) -> None:
     if color is None:
         color = [123, 161, 58]
-    pygame.draw.rect(screen, color, [bx, by, constant.BUTTON_W, constant.BUTTON_H])
+    pygame.draw.rect(
+        screen, color, [bx, by, constant.BUTTON_W, constant.BUTTON_H])
     text = font.render("End turn", True, (0, 0, 0))
     screen.blit(text, (
         bx + (constant.BUTTON_W - text.get_width()) // 2,
@@ -140,7 +143,9 @@ def draw_timer(
         bx: int,
         by: int,
 ) -> None:
-    screen.blit(timer_text, (bx + (constant.BUTTON_W - timer_text.get_width()) // 2, by))
+    screen.blit(
+        timer_text, (bx + (constant.BUTTON_W -
+                           timer_text.get_width()) // 2, by))
 
 
 def make_button_turn(
@@ -151,8 +156,10 @@ def make_button_turn(
         bx: int,
         by: int,
 ) -> None:
-    hovering = bx <= mouse_x < bx + constant.BUTTON_W and by <= mouse_y < by + constant.BUTTON_H
-    draw_end_turn_button(screen, font_title, bx, by, [73, 161, 108] if hovering else None)
+    hovering = bx <= mouse_x < bx + \
+        constant.BUTTON_W and by <= mouse_y < by + constant.BUTTON_H
+    draw_end_turn_button(screen, font_title, bx, by, [
+                         73, 161, 108] if hovering else None)
 
 
 def show_spell_data(
@@ -168,14 +175,17 @@ def show_spell_data(
                      [pos_x, pos_y - height_rect, 400, height_rect])
     screen.blit(font_title.render(spell.name, True, (255, 255, 255)),
                 (pos_x, pos_y - height_rect))
-    screen.blit(font_txt.render(f"Cost: {spell.cost} AP", True, (255, 255, 255)),
+    screen.blit(font_txt.render(f"Cost: {spell.cost} AP",
+                                True, (255, 255, 255)),
                 (pos_x, pos_y - height_rect + 50))
     for i, e in enumerate(spell.effects):
         screen.blit(font_txt.render(str(e), True, (255, 255, 255)),
-                    (pos_x, pos_y - height_rect + 100 + font_txt.get_height() * i))
+                    (pos_x, pos_y - height_rect + 100 +
+                     font_txt.get_height() * i))
     for i, d in enumerate(spell.description.split(".")):
         screen.blit(font_txt.render(d, True, (255, 255, 255)),
-                    (pos_x, pos_y - height_rect + 200 + font_txt.get_height() * i))
+                    (pos_x, pos_y - height_rect + 200 +
+                     font_txt.get_height() * i))
 
 
 def draw_spells(
@@ -188,18 +198,21 @@ def draw_spells(
         spell_y: int,
         avail_w: int,
 ) -> list[tuple[pygame.Surface, int, int]]:
-    """Draw spell icons centered in avail_w. Returns (image, x, y) for each spell."""
+    """Draw spell icons centered in avail_w. Returns (image, x, y)
+    for each spell."""
     images = [
         pygame.image.load(os.path.join("./src/sprites_png", s.sprite))
         for s in spells
     ]
-    total_w = sum(img.get_width() for img in images) + constant.SPELL_GAP * max(0, len(images) - 1)
+    total_w = sum(img.get_width() for img in images) + \
+        constant.SPELL_GAP * max(0, len(images) - 1)
     x = (avail_w - total_w) // 2
     renders: list[tuple[pygame.Surface, int, int]] = []
 
     for s, img in zip(spells, images):
         renders.append((img, x, spell_y))
-        if x <= mouse_x < x + img.get_width() and spell_y <= mouse_y < spell_y + img.get_height():
+        if x <= mouse_x < x + img.get_width() and \
+                spell_y <= mouse_y < spell_y + img.get_height():
             show_spell_data(screen, s, x, spell_y, font_title, font_txt)
         screen.blit(img, (x, spell_y))
         x += img.get_width() + constant.SPELL_GAP

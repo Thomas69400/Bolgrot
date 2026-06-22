@@ -1,6 +1,22 @@
+import random as _random
+
+
 class Patterns:
-    def __init__(self):
-        self.spawn_patterns: list[list[tuple[int, int]]] = [
-            [(2, 10), (6, 7), (12, 6), (13, 9), (12, 20), (18, 19)],
-            [(1, 10)]
-        ]
+    _all_patterns: list[list[tuple[int, int]]] = [
+        [(2, 10), (6, 7), (12, 6), (13, 9), (12, 20), (18, 19)],
+        [(1, 10)],
+    ]
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._rng = _random.Random(seed)
+        self.spawn_patterns: list[list[tuple[int, int]]] = list(self._all_patterns)
+
+    def draw(self) -> list[tuple[int, int]]:
+        if not self.spawn_patterns:
+            return []
+        pattern = self._rng.choice(self.spawn_patterns)
+        self.spawn_patterns.remove(pattern)
+        return pattern
+
+    def reset(self) -> None:
+        self.spawn_patterns = list(self._all_patterns)
