@@ -11,7 +11,7 @@ class LongJump(Spells):
             effects: list[str] = [],
             type_spell: list[tuple[TypeSpell, int]] = [],
             line_of_sight: bool = True,
-            sprite: str = "long_jump.xcf"
+            sprite: str = "long_jump.png"
     ):
         super().__init__(
             name, description, cost, max_use,

@@ -11,7 +11,7 @@ class MoveFlames(Spells):
             effects: list[str] = [],
             type_spell: list[tuple[TypeSpell, int]] = [],
             line_of_sight: bool = False,
-            sprite: str = "inaction.xcf"
+            sprite: str = "inaction.png"
     ):
         super().__init__(
             name, description, cost, max_use,

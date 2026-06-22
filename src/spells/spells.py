@@ -64,7 +64,7 @@ class Spells(ABC):
     def previsu(
         self,
         pos_player: tuple[int, int],
-        cases: list
+        cases: dict
     ) -> list[tuple]:
         all_pos: list[tuple] = []
         for type_s in self.type_spell:
@@ -90,7 +90,7 @@ class Spells(ABC):
     def make_line(
         self,
         pos_player: tuple[int, int],
-        cases: list,
+        cases: dict,
         range_s: int
     ) -> list[tuple]:
         x, y = pos_player
@@ -110,7 +110,7 @@ class Spells(ABC):
     def make_diag(
         self,
         pos_player: tuple[int, int],
-        cases: list,
+        cases: dict,
         range_s: int
     ) -> list[tuple]:
         x, y = pos_player
@@ -128,12 +128,5 @@ class Spells(ABC):
             return []
 
     @staticmethod
-    def is_in_map(
-        pos_spell: tuple,
-        cases: list[dict[tuple, int]],
-    ) -> bool:
-        for c in cases:
-            for k, v in c.items():
-                if k == pos_spell:
-                    return True
-        return False
+    def is_in_map(pos_spell: tuple, cases: dict) -> bool:
+        return pos_spell in cases
