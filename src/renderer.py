@@ -35,12 +35,12 @@ def map_screen_bottom(cases: dict, offset: tuple[int, int]) -> int:
 
 
 def hover_tile(
-        screen_x: int,
-        screen_y: int,
+        mouse_x: int,
+        mouse_y: int,
         offset: tuple[int, int],
 ) -> tuple[int, int]:
-    x = screen_x - offset[0]
-    y = screen_y - offset[1]
+    x = mouse_x - offset[0]
+    y = mouse_y - offset[1]
     gx = (y / (constant.CASE_HEIGHT / 2) + x / (constant.CASE_WIDTH / 2)) / 2
     gy = (y / (constant.CASE_HEIGHT / 2) - x / (constant.CASE_WIDTH / 2)) / 2
     return round(gx), round(gy)
@@ -62,10 +62,11 @@ def draw_case(
     bottom_pt = (cx, cy + constant.CASE_HEIGHT / 2)
     left = (cx - constant.CASE_WIDTH / 2, cy)
     pygame.draw.polygon(screen, color, [top, right, bottom_pt, left])
+    pygame.draw.polygon(screen, (0, 0, 0), [top, right, bottom_pt, left], 1)
+
     if font:
         text = font.render(f"{x},{y}", True, (0, 0, 0))
         screen.blit(text, text.get_rect(center=(cx, cy)))
-    pygame.draw.polygon(screen, (0, 0, 0), [top, right, bottom_pt, left], 1)
 
 
 def draw_entities(
@@ -101,8 +102,8 @@ def make_case(
         font_txt: pygame.font.Font = None,
 ) -> None:
     gx, gy = hover_tile(mouse_x, mouse_y, offset)
-    hovered = (gx, gy) if 0 <= gx < grid_max_x and \
-        0 <= gy < grid_max_y else None
+    hovered = (gx, gy) if 0 <= gx <= grid_max_x and \
+        0 <= gy <= grid_max_y else None
 
     for (x, y) in cases:
         if (x, y) in previsualiation:

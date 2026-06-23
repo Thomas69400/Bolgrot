@@ -33,4 +33,5 @@ class ShortJump(Spells):
         ]
 
     def play(self):
+        print(f"Playing spell: {self.name}")
         pass

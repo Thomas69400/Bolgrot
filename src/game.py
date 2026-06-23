@@ -1,8 +1,9 @@
 from __future__ import annotations
+from . import constant
 from .map import Map
 from .patterns import Patterns
-from .entity import Flame
 from .spells import Spells
+from .entity import Flame
 
 
 class Game:
@@ -25,8 +26,18 @@ class Game:
         spell: Spells = self.player.spells[spell_index]
         self.previsualiation = spell.previsu(
             (self.player.pos_x, self.player.pos_y), self.map.cases)
-        if self.previsualiation:
-            spell.play()
+
+    def play_selected_spell(
+            self,
+            mouse_x: int,
+            mouse_y: int,
+            tile_clicked: tuple[int, int] | None = None,
+    ) -> None:
+        """Play the selected spell on the clicked tile, if valid."""
+        if not self.previsualiation or tile_clicked is None:
+            return
+
+        print("Attempting to play spell on tile:", tile_clicked)
 
     def clear_previsu(self) -> None:
         self.previsualiation = []

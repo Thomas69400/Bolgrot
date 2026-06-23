@@ -1,27 +1,13 @@
 import pygame
 from . import constant
 from .game import Game
+from .actions import (
+    on_button_end_turn_click, on_spell_hover, on_previsu_click
+)
 from .renderer import (
     make_case, draw_entities, make_button_turn, draw_timer, draw_spells,
     compute_map_offset, map_screen_bottom,
 )
-
-
-def on_button_end_turn(mouse_x: int, mouse_y: int, bx: int, by: int) -> bool:
-    return (bx <= mouse_x < bx + constant.BUTTON_W
-            and by <= mouse_y < by + constant.BUTTON_H)
-
-
-def on_spell(
-        mouse_x: int,
-        mouse_y: int,
-        spell_renders: list[tuple[pygame.Surface, int, int]],
-) -> tuple[bool, int | None]:
-    for i, (img, sx, sy) in enumerate(spell_renders):
-        if (sx <= mouse_x < sx + img.get_width()
-                and sy <= mouse_y < sy + img.get_height()):
-            return True, i
-    return False, None
 
 
 if __name__ == "__main__":
@@ -75,11 +61,18 @@ if __name__ == "__main__":
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if on_button_end_turn(mouse_x, mouse_y, bx, by):
+                    is_on_previsu, previsu_index = on_previsu_click(
+                        mouse_x, mouse_y, game.previsualiation, map_offset)
+                    if is_on_previsu:
+                        game.play_selected_spell(
+                            mouse_x,
+                            mouse_y,
+                            game.previsualiation[previsu_index])
+                    elif on_button_end_turn_click(mouse_x, mouse_y, bx, by):
                         timer_sec = constant.TIME_TURN
                         game.end_turn()
                     else:
-                        clicked_spell, spell_index = on_spell(
+                        clicked_spell, spell_index = on_spell_hover(
                             mouse_x, mouse_y, spell_renders)
                         if clicked_spell:
                             game.select_spell(spell_index)

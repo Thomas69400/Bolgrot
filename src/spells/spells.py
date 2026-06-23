@@ -77,7 +77,6 @@ class Spells(ABC):
                         r
                     ))
                 case 4:
-                    print(Direction.DIRECTIONS_DIAGONALS.value)
                     all_pos.extend(self.make_diag(
                         pos_player,
                         cases,
