@@ -1,4 +1,10 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from .spells import Spells, TypeSpell
+
+if TYPE_CHECKING:
+    from ..entity import Player
+    from ..map import Map
 
 
 class ShortJump(Spells):
@@ -32,6 +38,18 @@ class ShortJump(Spells):
             (TypeSpell.LINE, 1)
         ]
 
-    def play(self):
-        print(f"Playing spell: {self.name}")
-        pass
+    def play(
+        self,
+        map: Map,
+        player: Player,
+        tile_clicked: tuple[int, int]
+    ) -> None:
+        """Teleport the player to the clicked tile, if valid."""
+        if tile_clicked not in self.previsu(
+                (player.pos_x, player.pos_y), map.cases):
+            return
+        map.cases[(player.pos_x, player.pos_y)] = 0
+        player.pos_x, player.pos_y = tile_clicked
+        player.hp -= 1
+        player.pa -= self.cost
+        map.cases[(player.pos_x, player.pos_y)] = player

@@ -10,10 +10,12 @@ class Player(Entity):
     ):
         super().__init__()
         self.type_entity: TypeEntity = TypeEntity.PLAYER
+        self.blocks_sight: bool = False
         self.pos_x: int | None = x
         self.pos_y: int | None = y
         self.hp: int = 40
         self.base_PA: int = 10
+        self.pa: int = self.base_PA
         self.spells: list[Spells] = [
             ShortJump(),
             LongJump(),

@@ -12,3 +12,5 @@ class TypeEntity(Enum):
 class Entity(ABC):
     def __init__(self):
         self.type_entity: TypeEntity | None = None
+        self.blocks_sight: bool = True
+        self.killable: bool = True

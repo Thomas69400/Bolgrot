@@ -13,6 +13,7 @@ class Game:
         self.patterns: Patterns = Patterns(seed=seed)
         self.spawn_pattern: list[tuple[int, int]] = self.patterns.draw()
         self.previsualiation: list[tuple[int, int]] = []
+        self.spell: Spells | None = None
         self.turn: int = 0
         self.done: bool = False
 
@@ -24,20 +25,20 @@ class Game:
         if spell_index < 0 or spell_index >= len(self.player.spells):
             return
         spell: Spells = self.player.spells[spell_index]
+        self.spell = spell
         self.previsualiation = spell.previsu(
             (self.player.pos_x, self.player.pos_y), self.map.cases)
 
     def play_selected_spell(
             self,
-            mouse_x: int,
-            mouse_y: int,
             tile_clicked: tuple[int, int] | None = None,
     ) -> None:
         """Play the selected spell on the clicked tile, if valid."""
         if not self.previsualiation or tile_clicked is None:
             return
 
-        print("Attempting to play spell on tile:", tile_clicked)
+        self.spell.play(self.map, self.player, tile_clicked)
+        self.clear_previsu()
 
     def clear_previsu(self) -> None:
         self.previsualiation = []

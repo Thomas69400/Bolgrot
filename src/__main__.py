@@ -63,21 +63,19 @@ if __name__ == "__main__":
                 if event.button == 1:
                     is_on_previsu, previsu_index = on_previsu_click(
                         mouse_x, mouse_y, game.previsualiation, map_offset)
+                    clicked_spell, spell_index = on_spell_hover(
+                            mouse_x, mouse_y, spell_renders)
+
                     if is_on_previsu:
                         game.play_selected_spell(
-                            mouse_x,
-                            mouse_y,
                             game.previsualiation[previsu_index])
                     elif on_button_end_turn_click(mouse_x, mouse_y, bx, by):
                         timer_sec = constant.TIME_TURN
                         game.end_turn()
+                    elif clicked_spell:
+                        game.select_spell(spell_index)
                     else:
-                        clicked_spell, spell_index = on_spell_hover(
-                            mouse_x, mouse_y, spell_renders)
-                        if clicked_spell:
-                            game.select_spell(spell_index)
-                        else:
-                            game.clear_previsu()
+                        game.clear_previsu()
 
         make_case(screen, mouse_x, mouse_y, game.map.cases,
                   game.previsualiation, game.spawn_pattern,

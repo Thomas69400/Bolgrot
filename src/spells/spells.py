@@ -102,7 +102,8 @@ class Spells(ABC):
                     nx, ny = nx + dx, ny + dy
                     if self.is_in_map((nx, ny), cases) and \
                             not self.is_blocked_by_sight(
-                                (nx, ny), cases, direction):
+                                (nx, ny), cases, direction) and \
+                       self.is_entity_killable((nx, ny), cases):
                         possible_pos.append((nx, ny))
             return possible_pos
         except Exception:
@@ -124,11 +125,24 @@ class Spells(ABC):
                     nx, ny = nx + dx, ny + dy
                     if self.is_in_map((nx, ny), cases) and \
                             not self.is_blocked_by_sight(
-                                (nx, ny), cases, direction):
+                                (nx, ny), cases, direction) and \
+                       self.is_entity_killable((nx, ny), cases):
                         possible_pos.append((nx, ny))
             return possible_pos
         except Exception:
             return []
+
+    def is_entity_killable(
+        self,
+        pos_spell: tuple,
+        cases: dict
+    ) -> bool:
+        from ..entity import Entity
+        if self.line_of_sight is False:
+            return True
+        if pos_spell in cases and isinstance(cases[pos_spell], Entity):
+            return cases[pos_spell].killable
+        return True
 
     def is_blocked_by_sight(
         self,
@@ -136,8 +150,6 @@ class Spells(ABC):
         cases: dict,
         direction: Direction,
     ) -> bool:
-        """Check if the spell is blocked by a wall or obstacle."""
-        from ..entity import Player
         if self.line_of_sight is False:
             return False
 
@@ -145,9 +157,8 @@ class Spells(ABC):
         dx, dy = -1 * dx, -1 * dy
         nx, ny = pos_spell[0] + dx, pos_spell[1] + dy
         for case in cases:
-            if ((nx, ny) == case and
-                    (cases[case] != 0 and
-                     not isinstance(cases[case], Player))):
+            if ((nx, ny) == case and (cases[case] != 0 and
+                                      cases[case].blocks_sight)):
                 return True
         return False
 
