@@ -100,7 +100,9 @@ class Spells(ABC):
                 nx, ny = x, y
                 for i in range(range_s):
                     nx, ny = nx + dx, ny + dy
-                    if self.is_in_map((nx, ny), cases):
+                    if self.is_in_map((nx, ny), cases) and \
+                            not self.is_blocked_by_sight(
+                                (nx, ny), cases, direction):
                         possible_pos.append((nx, ny))
             return possible_pos
         except Exception:
@@ -120,12 +122,38 @@ class Spells(ABC):
                 nx, ny = x, y
                 for i in range(range_s):
                     nx, ny = nx + dx, ny + dy
-                    if self.is_in_map((nx, ny), cases):
+                    if self.is_in_map((nx, ny), cases) and \
+                            not self.is_blocked_by_sight(
+                                (nx, ny), cases, direction):
                         possible_pos.append((nx, ny))
             return possible_pos
         except Exception:
             return []
 
-    @staticmethod
-    def is_in_map(pos_spell: tuple, cases: dict) -> bool:
+    def is_blocked_by_sight(
+        self,
+        pos_spell: tuple,
+        cases: dict,
+        direction: Direction,
+    ) -> bool:
+        """Check if the spell is blocked by a wall or obstacle."""
+        from ..entity import Player
+        if self.line_of_sight is False:
+            return False
+
+        dx, dy = direction
+        dx, dy = -1 * dx, -1 * dy
+        nx, ny = pos_spell[0] + dx, pos_spell[1] + dy
+        for case in cases:
+            if ((nx, ny) == case and
+                    (cases[case] != 0 and
+                     not isinstance(cases[case], Player))):
+                return True
+        return False
+
+    def is_in_map(
+        self,
+        pos_spell: tuple,
+        cases: dict
+    ) -> bool:
         return pos_spell in cases
