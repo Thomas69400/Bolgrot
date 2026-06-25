@@ -3,13 +3,17 @@ from . import constant
 from .map import Map
 from .patterns import Patterns
 from .spells import Spells
-from .entity import Flame
+from .entity import Flame, Player, Entity
 
 
 class Game:
-    def __init__(self, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        player: Player,
+        seed: int | None = None,
+    ) -> None:
         self.map: Map = Map()
-        self.player = self.map.player
+        self.player: Player = player
         self.patterns: Patterns = Patterns(seed=seed)
         self.spawn_pattern: list[tuple[int, int]] = self.patterns.draw()
         self.previsualiation: list[tuple[int, int]] = []

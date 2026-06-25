@@ -132,22 +132,29 @@ class Spells(ABC):
         except Exception:
             return []
 
+    def _find_case(self, pos: tuple, cases: list):
+        for case in cases:
+            if (case.x, case.y) == pos:
+                return case
+        return None
+
     def is_entity_killable(
         self,
         pos_spell: tuple,
-        cases: dict
+        cases: list
     ) -> bool:
         from ..entity import Entity
         if self.line_of_sight is False:
             return True
-        if pos_spell in cases and isinstance(cases[pos_spell], Entity):
-            return cases[pos_spell].killable
+        c = self._find_case(pos_spell, cases)
+        if c is not None and isinstance(c.entity, Entity):
+            return c.entity.killable
         return True
 
     def is_blocked_by_sight(
         self,
         pos_spell: tuple,
-        cases: dict,
+        cases: list,
         direction: Direction,
     ) -> bool:
         if self.line_of_sight is False:
@@ -156,15 +163,12 @@ class Spells(ABC):
         dx, dy = direction
         dx, dy = -1 * dx, -1 * dy
         nx, ny = pos_spell[0] + dx, pos_spell[1] + dy
-        for case in cases:
-            if ((nx, ny) == case and (cases[case] != 0 and
-                                      cases[case].blocks_sight)):
-                return True
-        return False
+        c = self._find_case((nx, ny), cases)
+        return c is not None and c.entity is not None and c.entity.blocks_sight
 
     def is_in_map(
         self,
         pos_spell: tuple,
-        cases: dict
+        cases: list
     ) -> bool:
-        return pos_spell in cases
+        return self._find_case(pos_spell, cases) is not None

@@ -1,4 +1,5 @@
 import pygame
+from .entity import Player
 from . import constant
 from .game import Game
 from .actions import (
@@ -25,7 +26,7 @@ if __name__ == "__main__":
         "02:00", True, (255, 255, 255))
     pygame.time.set_timer(timer_event, 1000)
 
-    game: Game = Game()
+    game: Game = Game(player=Player(*constant.BASE_PLAYER_POS))
     spell_renders: list[tuple[pygame.Surface, int, int]] = []
 
     sw, sh = screen.get_width(), screen.get_height()
@@ -71,7 +72,7 @@ if __name__ == "__main__":
                             game.previsualiation[previsu_index])
                     elif on_button_end_turn_click(mouse_x, mouse_y, bx, by):
                         timer_sec = constant.TIME_TURN
-                        game.end_turn()
+                        # game.end_turn()
                     elif clicked_spell:
                         game.select_spell(spell_index)
                     else:
@@ -81,7 +82,7 @@ if __name__ == "__main__":
                   game.previsualiation, game.spawn_pattern,
                   game.map.grid_max_x, game.map.grid_max_y,
                   map_offset, font_txt)
-        draw_entities(screen, game.map.cases, map_offset)
+        # draw_entities(screen, game.map.cases, map_offset)
         make_button_turn(screen, mouse_x, mouse_y, font_title, bx, by)
         draw_timer(screen, timer_text, bx, by - 60)
         spell_renders = draw_spells(screen, mouse_x, mouse_y,

@@ -25,3 +25,5 @@ SPELL_GAP = 10
 
 # IN SECONDS
 TIME_TURN = 120
+
+MAP_CONF = "./src/config/bolgrot.map"

@@ -1,26 +1,27 @@
 from __future__ import annotations
 import os
 import pygame
+from .case import Case
 from . import constant
-from .entity import TypeEntity, Entity
+from .entity import TypeEntity
 from .spells import Spells
 
 
 def grid_to_iso(x: int, y: int) -> tuple[int, int]:
-    nx = (x - y) * (constant.CASE_WIDTH / 2)
-    ny = (x + y) * (constant.CASE_HEIGHT / 2)
+    nx = (x + y) * (constant.CASE_WIDTH / 2)
+    ny = (x - y) * (constant.CASE_HEIGHT / 2)
     return int(nx), int(ny)
 
 
 def compute_map_offset(
-        cases: dict,
+        cases: list[Case],
         screen_w: int,
         screen_h: int,
         spell_bar_h: int = 120,
 ) -> tuple[int, int]:
     """Screen pixel position of iso origin (0,0) that centers the map."""
-    iso_xs = [(x - y) * constant.CASE_WIDTH // 2 for (x, y) in cases]
-    iso_ys = [(x + y) * constant.CASE_HEIGHT // 2 for (x, y) in cases]
+    iso_xs = [case.y * constant.CASE_WIDTH for case in cases]
+    iso_ys = [(case.x - case.y) * constant.CASE_HEIGHT // 2 for case in cases]
     iso_cx = (min(iso_xs) + max(iso_xs)) // 2
     iso_cy = (min(iso_ys) + max(iso_ys)) // 2
     avail_w = screen_w - constant.RIGHT_PANEL_W
@@ -28,9 +29,9 @@ def compute_map_offset(
     return avail_w // 2 - iso_cx, avail_h // 2 - iso_cy
 
 
-def map_screen_bottom(cases: dict, offset: tuple[int, int]) -> int:
+def map_screen_bottom(cases: list[Case], offset: tuple[int, int]) -> int:
     """Y screen coordinate of the lowest tile's bottom edge."""
-    iso_ys = [(x + y) * constant.CASE_HEIGHT // 2 for (x, y) in cases]
+    iso_ys = [(case.x - case.y) * constant.CASE_HEIGHT // 2 for case in cases]
     return offset[1] + max(iso_ys) + constant.CASE_HEIGHT // 2
 
 
@@ -41,8 +42,8 @@ def hover_tile(
 ) -> tuple[int, int]:
     x = mouse_x - offset[0]
     y = mouse_y - offset[1]
-    gx = (y / (constant.CASE_HEIGHT / 2) + x / (constant.CASE_WIDTH / 2)) / 2
-    gy = (y / (constant.CASE_HEIGHT / 2) - x / (constant.CASE_WIDTH / 2)) / 2
+    gy = x / constant.CASE_WIDTH
+    gx = 2 * y / constant.CASE_HEIGHT + gy
     return round(gx), round(gy)
 
 
@@ -71,11 +72,13 @@ def draw_case(
 
 def draw_entities(
         screen: pygame.Surface,
-        cases: dict[tuple[int, int], int | Entity],
+        cases: list[Case],
         offset: tuple[int, int],
 ) -> None:
-    for (x, y), v in cases.items():
-        if v == 0:
+    for case in cases:
+        x, y = case.x, case.y
+        v = case.entity
+        if v is None:
             continue
         iso_x, iso_y = grid_to_iso(x, y)
         cx = iso_x + offset[0]
@@ -93,7 +96,7 @@ def make_case(
         screen: pygame.Surface,
         mouse_x: int,
         mouse_y: int,
-        cases: dict[tuple[int, int], int | Entity],
+        cases: list[Case],
         previsualiation: list[tuple],
         spawn_pattern: list[tuple],
         grid_max_x: int,
@@ -105,7 +108,8 @@ def make_case(
     hovered = (gx, gy) if 0 <= gx <= grid_max_x and \
         0 <= gy <= grid_max_y else None
 
-    for (x, y) in cases:
+    for case in cases:
+        x, y = case.x, case.y
         if (x, y) in previsualiation:
             color = constant.PREVISU_COLO
         elif (x, y) in spawn_pattern:
