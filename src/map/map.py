@@ -31,18 +31,14 @@ class Map:
 
         start_x: int = 0
         start_y: int = len(lines[0]) - 1
-        print("FIRST START Y =", start_y)
         for n_line, line in enumerate(lines):
-            print(f"LINE {n_line} =", line)
             x: int = start_x
             y: int = start_y
-            print("START Y", y)
             for symbol in line:
                 if symbol == "N":
                     y -= 1
                     x += 1
                     continue
-                print(f"CREATING {(x, y)}")
                 self.cases.append(
                     Case(x, y, case_type=SYMBOL_MAP.get(symbol, CaseType.FREE)
                          ))
@@ -51,7 +47,6 @@ class Map:
             if n_line % 2 == 1:
                 start_x += 1
             if n_line % 2 == 0:
-                print("ADD START Y WHEN LINE =", n_line)
                 start_y += 1
 
         self.grid_max_x = max(case.x for case in self.cases)

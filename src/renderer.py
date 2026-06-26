@@ -7,6 +7,16 @@ from .entity import TypeEntity
 from .spells import Spells
 
 
+class Renderer:
+    def __init__(
+        self,
+        cases: list[Case],
+        screen_dimension: tuple[int, int],
+        font_str: str | None = None,
+    ):
+        pass
+
+
 def grid_to_iso(x: int, y: int) -> tuple[int, int]:
     nx = (x - y) * (constant.CASE_WIDTH / 2)
     ny = (x + y) * (constant.CASE_HEIGHT / 2)
@@ -20,8 +30,8 @@ def compute_map_offset(
         spell_bar_h: int = 120,
 ) -> tuple[int, int]:
     """Screen pixel position of iso origin (0,0) that centers the map."""
-    iso_xs = [case.y * constant.CASE_WIDTH for case in cases]
-    iso_ys = [(case.x - case.y) * constant.CASE_HEIGHT // 2 for case in cases]
+    iso_xs = [(case.x - case.y) * constant.CASE_WIDTH // 2 for case in cases]
+    iso_ys = [(case.x + case.y) * constant.CASE_HEIGHT // 2 for case in cases]
     iso_cx = (min(iso_xs) + max(iso_xs)) // 2
     iso_cy = (min(iso_ys) + max(iso_ys)) // 2
     avail_w = screen_w - constant.RIGHT_PANEL_W
@@ -31,7 +41,7 @@ def compute_map_offset(
 
 def map_screen_bottom(cases: list[Case], offset: tuple[int, int]) -> int:
     """Y screen coordinate of the lowest tile's bottom edge."""
-    iso_ys = [(case.x - case.y) * constant.CASE_HEIGHT // 2 for case in cases]
+    iso_ys = [(case.x + case.y) * constant.CASE_HEIGHT // 2 for case in cases]
     return offset[1] + max(iso_ys) + constant.CASE_HEIGHT // 2
 
 
@@ -42,9 +52,9 @@ def hover_tile(
 ) -> tuple[int, int]:
     x = mouse_x - offset[0]
     y = mouse_y - offset[1]
-    gy = x / constant.CASE_WIDTH
-    gx = 2 * y / constant.CASE_HEIGHT + gy
-    return round(gx), round(gy)
+    gx = 2 * y // constant.CASE_WIDTH
+    gy = x // constant.CASE_HEIGHT
+    return int(gx), int(gy)
 
 
 def draw_case(
