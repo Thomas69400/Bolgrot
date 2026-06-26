@@ -8,8 +8,8 @@ from .spells import Spells
 
 
 def grid_to_iso(x: int, y: int) -> tuple[int, int]:
-    nx = (x + y) * (constant.CASE_WIDTH / 2)
-    ny = (x - y) * (constant.CASE_HEIGHT / 2)
+    nx = (x - y) * (constant.CASE_WIDTH / 2)
+    ny = (x + y) * (constant.CASE_HEIGHT / 2)
     return int(nx), int(ny)
 
 

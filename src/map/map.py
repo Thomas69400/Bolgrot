@@ -26,30 +26,33 @@ class Map:
         map_conf: str
     ) -> None:
         with open(map_conf, "r") as f:
-            lines = [line.rstrip('\n').replace(" ", "") for line in f if line.strip()]
+            lines = [line.rstrip('\n').replace(" ", "")
+                     for line in f if line.strip()]
 
-        len_lines = len(lines[0])
-        start_x = 0
-        for n_line in range(len(lines)):
-            n_N = 0
-            print(f"Line {n_line}: {lines[n_line]}")
-            for n_char, char in enumerate(lines[n_line]):
-                if char == "N":
-                    n_N += 1
+        start_x: int = 0
+        start_y: int = len(lines[0]) - 1
+        print("FIRST START Y =", start_y)
+        for n_line, line in enumerate(lines):
+            print(f"LINE {n_line} =", line)
+            x: int = start_x
+            y: int = start_y
+            print("START Y", y)
+            for symbol in line:
+                if symbol == "N":
+                    y -= 1
+                    x += 1
                     continue
-                elif len(char) != 1 or char not in SYMBOL_MAP:
-                    raise ValueError(
-                        f"Invalid character '{char}' in map config.")
-
-                print(n_line, n_char, char, n_N)
-                if n_char < len_lines - n_line - 1:
-                    x = n_char - n_N
-                else:
-                    x = start_x
-                y = len_lines - n_char
-                print(f"Adding case at ({x}, {y}) with type {SYMBOL_MAP[char]}")
-                self.cases.append(Case(x, y, SYMBOL_MAP[char]))
-            start_x += 1
+                print(f"CREATING {(x, y)}")
+                self.cases.append(
+                    Case(x, y, case_type=SYMBOL_MAP.get(symbol, CaseType.FREE)
+                         ))
+                x += 1
+                y -= 1
+            if n_line % 2 == 1:
+                start_x += 1
+            if n_line % 2 == 0:
+                print("ADD START Y WHEN LINE =", n_line)
+                start_y += 1
 
         self.grid_max_x = max(case.x for case in self.cases)
         self.grid_max_y = max(case.y for case in self.cases)
