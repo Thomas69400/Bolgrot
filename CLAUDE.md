@@ -20,49 +20,56 @@ This is a pygame turn-based isometric grid game. The player tries to survive on 
 
 ### Module responsibilities
 
-- `src/game.py` — `Game` class: owns all game state and exposes the action API (`select_spell`, `end_turn`, `reset`). Contains stubbed `step()` and `get_observation()` methods (currently commented out) as future entry points for a NEAT/AI runner. **No pygame dependency** — can be imported and run headlessly.
-- `src/renderer.py` — all pygame drawing functions. Receives game state as arguments; never mutates it. `compute_map_offset()` calculates the isometric origin that centers the map on screen. The right panel width and button dimensions live in `constant.py`, not here.
-- `src/__main__.py` — pygame event loop only. Translates user input into `Game` method calls; passes game state to renderer functions.
-- `src/constant.py` — all magic numbers including layout constants (`RIGHT_PANEL_W`, `BUTTON_W`, `BUTTON_H`, `SPELL_GAP`).
+- `src/game.py` — `Game` class: owns all game state and exposes the action API (`select_spell`, `play_selected_spell`, `clear_previsu`, `end_turn`, `reset`). Contains stubbed `step()` and `get_observation()` methods (currently commented out) as future entry points for a NEAT/AI runner. **No pygame dependency** — can be imported and run headlessly.
+- `src/renderer.py` — `Renderer` class: holds rendering state (screen offset, end-turn button, spell render list). All drawing methods receive game state as arguments and never mutate it. `_compute_map_offset()` (static method) calculates the isometric origin that centers the map on screen.
+- `src/__main__.py` — pygame event loop only. Translates user input into `Game` method calls; passes game state to `Renderer` methods.
+- `src/constant.py` — all magic numbers including layout constants (`RIGHT_PANEL_W`, `BUTTON_W`, `BUTTON_H`, `SPELL_GAP`) and map config path (`MAP_CONF`).
+- `src/actions.py` — stateless click/hover helpers: `on_previsu_click()`, `on_spell_hover()`, `on_button_end_turn_click()`.
+- `src/case/case.py` — `Case` class (grid cell with `x`, `y`, `entity`, `case_type`) and `CaseType` enum (`FREE`, `WALL`, `EMPTY`). `Case.draw()` handles isometric rendering and `Case.contains()` does mouse hit-testing.
+- `src/button/button.py` — `Button` class for the end-turn button.
 
 ### Map representation
 
-`Map.cases` is a `dict[tuple[int,int], int | Entity]` mapping each grid coordinate to either `0` (empty) or an `Entity` instance.
+`Map.cases` is a `list[Case]`. Each `Case` holds its grid coordinates (`x`, `y`), an optional `entity: Entity | None`, and a `case_type: CaseType`.
 
-The playable area is a trimmed diamond cut from a 37×34 rectangular grid. `Map.cut_map()` calls four directional trim methods plus `remove_extra()`. After trimming, `Map.clean_map()` shifts all coordinates to start at (0,0) and stores the final bounds as `self.grid_max_x / self.grid_max_y` on the `Map` instance (does not mutate `constant.py`).
+The map is loaded from `./src/config/bolgrot.map` (path in `constant.MAP_CONF`) by `Map.parse_map()`. The file uses a symbol grid: `.` = FREE, `#` = WALL, `|` = EMPTY, `N` = skip (no cell). After parsing, `self.grid_max_x` and `self.grid_max_y` store the bounds.
 
 ### Coordinate system
 
-`grid_to_iso(x, y)` in `renderer.py` converts grid coords to isometric pixel offsets:
+Iso conversion is done inline wherever needed:
 - `iso_x = (x - y) * (CASE_WIDTH / 2)`
 - `iso_y = (x + y) * (CASE_HEIGHT / 2)`
 
-All rendering functions take an `offset: tuple[int, int]` — the screen pixel position of iso origin (0,0). `hover_tile()` is the inverse, converting mouse position back to grid coords using the same offset.
+All rendering uses `offset: tuple[int, int]` — the screen pixel position of iso origin (0,0), stored on the `Renderer` instance. The inverse (mouse → grid) is computed in `Case.contains()` and in `on_previsu_click()` in `actions.py`.
 
 ### Entity hierarchy
 
 ```
 Entity (ABC)
-├── Player   — has pos_x/y, hp, base_PA, and a list of Spells
-├── Bolgrot  — has pos_x/y
-└── Flame    — placed by Map.place_flames()
+├── blocks_sight: bool = True   (Player overrides to False)
+├── killable: bool = True        (Bolgrot overrides to False)
+├── Player   — pos_x/y, hp, base_PA, pa (current AP), list[Spells]
+├── Bolgrot  — pos_x/y, killable=False
+└── Flame    — pos_x/y
 ```
 
 ### Spell system
 
 ```
 Spells (ABC)
-├── ShortJump  ("Astral leap")  — LINE range 1
-├── LongJump   ("Double leap")  — LINE range 2
-└── MoveFlames ("Inaction")     — DIAGONAL range 1
+├── ShortJump  ("Astral leap")  — LINE range 1, implemented play()
+├── LongJump   ("Double leap")  — LINE range 2, implemented play(), tracks time_used
+└── MoveFlames ("Inaction")     — DIAGONAL range 1, line_of_sight=False, moves all flames toward target
 ```
 
-Each spell defines `type_spell: list[tuple[TypeSpell, int]]` where `TypeSpell` is LINE/DIAGONAL/FULL and the int is range. `Spells.previsu()` computes reachable tiles. `Spells.play()` is unimplemented (`pass`) in all concrete spells. Line-of-sight is a `bool` field on `Spells` but not yet enforced in `previsu()`.
+Each spell defines `type_spell: list[tuple[TypeSpell, int]]` where `TypeSpell` is LINE/DIAGONAL/FULL and the int is range. `Spells.previsu()` computes reachable tiles using `is_in_map()`, `is_blocked_by_sight()`, and `is_entity_killable()` — line-of-sight IS enforced in `previsu()` via the `line_of_sight` bool. All three concrete spells have implemented `play()` methods.
+
+Spells also carry `cost` (AP cost), `max_use`, `effects: list[str]`, and render a tooltip on hover via `_draw_tooltip()`.
 
 ### Flame spawn patterns
 
-`Patterns(seed=None)` holds a list of patterns; each pattern is a list of grid coordinates. `Patterns.draw()` picks one at random (without replacement) using a seeded `random.Random` instance, making runs reproducible. Each turn, the drawn pattern is passed to `Map.place_flames()`.
+`Patterns(seed=None)` holds `_all_patterns` (class-level list of patterns); each pattern is a list of grid coordinates. `Patterns.draw()` picks one at random (without replacement) using a seeded `random.Random` instance, making runs reproducible. Each turn, the drawn pattern is passed to `Game.end_turn()` which calls `Map.place_entity()` per position. `Patterns.reset()` restores the full pool.
 
 ### Sprite assets
 
-Sprites are stored as both `.xcf` (GIMP source) and `.png` in `src/sprites_png/`. Spell classes reference `.png` filenames in their `sprite` field.
+Sprites are stored as both `.xcf` (GIMP source) and `.png` in `src/sprites_png/`. Spell classes reference `.png` filenames in their `sprite` field. Images are lazy-loaded on first access via the `image` property.

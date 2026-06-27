@@ -73,7 +73,7 @@ if __name__ == "__main__":
                         game.clear_previsu()
 
         renderer.draw_map(mouse_x, mouse_y, game.map.cases,
-                          game.previsualiation, game.spawn_pattern, show_coords=True)
+                          game.previsualiation, game.spawn_pattern)
         renderer.draw_entities(game.map.cases)
         renderer.end_turn_button.draw(mouse_x, mouse_y)
         renderer.draw_timer(timer_text)

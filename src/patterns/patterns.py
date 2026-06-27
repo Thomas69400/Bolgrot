@@ -9,7 +9,8 @@ class Patterns:
 
     def __init__(self, seed: int | None = None) -> None:
         self._rng = _random.Random(seed)
-        self.spawn_patterns: list[list[tuple[int, int]]] = list(self._all_patterns)
+        self.spawn_patterns: list[list[tuple[int, int]]] = list(
+            self._all_patterns)
 
     def draw(self) -> list[tuple[int, int]]:
         if not self.spawn_patterns:
