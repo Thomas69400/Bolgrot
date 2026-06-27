@@ -2,13 +2,8 @@ import pygame
 from .entity import Player
 from . import constant
 from .game import Game
-from .actions import (
-    on_button_end_turn_click, on_spell_hover, on_previsu_click
-)
-from .renderer import (
-    make_case, draw_entities, make_button_turn, draw_timer, draw_spells,
-    compute_map_offset, map_screen_bottom,
-)
+from .actions import on_previsu_click
+from .renderer import Renderer
 
 
 if __name__ == "__main__":
@@ -27,14 +22,7 @@ if __name__ == "__main__":
     pygame.time.set_timer(timer_event, 1000)
 
     game: Game = Game(player=Player(*constant.BASE_PLAYER_POS))
-    spell_renders: list[tuple[pygame.Surface, int, int]] = []
-
-    sw, sh = screen.get_width(), screen.get_height()
-    avail_w = sw - constant.RIGHT_PANEL_W
-    map_offset = compute_map_offset(game.map.cases, sw, sh)
-    spell_y = map_screen_bottom(game.map.cases, map_offset) + 20
-    bx = avail_w + (constant.RIGHT_PANEL_W - constant.BUTTON_W) // 2
-    by = sh // 2
+    renderer = Renderer(screen, font_title, font_txt, game.map.cases)
 
     while running:
         screen.fill((0, 0, 0))
@@ -54,7 +42,7 @@ if __name__ == "__main__":
                 else:
                     pygame.time.set_timer(timer_event, 1000)
                     timer_sec = constant.TIME_TURN
-                    game.end_turn()
+                    # game.end_turn()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -63,31 +51,33 @@ if __name__ == "__main__":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     is_on_previsu, previsu_index = on_previsu_click(
-                        mouse_x, mouse_y, game.previsualiation, map_offset)
-                    clicked_spell, spell_index = on_spell_hover(
-                            mouse_x, mouse_y, spell_renders)
+                        mouse_x, mouse_y, game.previsualiation,
+                        renderer.offset)
+                    spell_index = next(
+                        (i for i, (s, sx, sy)
+                         in enumerate(renderer.spell_renders)
+                         if s.contains(mouse_x, mouse_y, sx, sy)),
+                        None,
+                    )
+                    clicked_spell = spell_index is not None
 
                     if is_on_previsu:
                         game.play_selected_spell(
                             game.previsualiation[previsu_index])
-                    elif on_button_end_turn_click(mouse_x, mouse_y, bx, by):
+                    elif renderer.end_turn_button.contains(mouse_x, mouse_y):
                         timer_sec = constant.TIME_TURN
-                        # game.end_turn()
+                        game.end_turn()
                     elif clicked_spell:
                         game.select_spell(spell_index)
                     else:
                         game.clear_previsu()
 
-        make_case(screen, mouse_x, mouse_y, game.map.cases,
-                  game.previsualiation, game.spawn_pattern,
-                  game.map.grid_max_x, game.map.grid_max_y,
-                  map_offset, font_txt)
-        # draw_entities(screen, game.map.cases, map_offset)
-        make_button_turn(screen, mouse_x, mouse_y, font_title, bx, by)
-        draw_timer(screen, timer_text, bx, by - 60)
-        spell_renders = draw_spells(screen, mouse_x, mouse_y,
-                                    game.player.spells, font_title, font_txt,
-                                    spell_y, avail_w)
+        renderer.draw_map(mouse_x, mouse_y, game.map.cases,
+                          game.previsualiation, game.spawn_pattern, show_coords=True)
+        renderer.draw_entities(game.map.cases)
+        renderer.end_turn_button.draw(mouse_x, mouse_y)
+        renderer.draw_timer(timer_text)
+        renderer.draw_spells(mouse_x, mouse_y, game.player.spells)
 
         pygame.display.update()
         pygame.display.flip()

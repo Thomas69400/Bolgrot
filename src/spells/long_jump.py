@@ -1,4 +1,10 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from .spells import Spells, TypeSpell
+
+if TYPE_CHECKING:
+    from ..entity import Player
+    from ..map import Map
 
 
 class LongJump(Spells):
@@ -33,8 +39,25 @@ class LongJump(Spells):
             (TypeSpell.LINE, 2)
         ]
 
-    def play(self):
-        pass
+    def play(
+        self,
+        map: Map,
+        player: Player,
+        tile_clicked: tuple[int, int],
+    ) -> None:
+        if tile_clicked not in self.previsu(
+                (player.pos_x, player.pos_y), map.cases):
+            return
+        src = self._find_case((player.pos_x, player.pos_y), map.cases)
+        dst = self._find_case(tile_clicked, map.cases)
+        if src is None or dst is None:
+            return
+        src.entity = None
+        player.pos_x, player.pos_y = tile_clicked
+        player.hp -= 1
+        player.pa -= self.cost
+        dst.entity = player
+        self.time_used += 1
 
     def next_turn(self):
         self.time_used = 0

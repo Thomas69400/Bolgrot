@@ -3,8 +3,8 @@ import random as _random
 
 class Patterns:
     _all_patterns: list[list[tuple[int, int]]] = [
-        [(2, 10), (6, 7), (12, 6), (13, 9), (12, 20), (18, 19)],
-        [(1, 10)],
+        [(14, 11), (13, 8), (7, 9), (13, 22), (19, 21), (3, 12)],
+        [(15, 10)],
     ]
 
     def __init__(self, seed: int | None = None) -> None:

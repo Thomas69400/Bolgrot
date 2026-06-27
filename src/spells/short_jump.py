@@ -44,12 +44,15 @@ class ShortJump(Spells):
         player: Player,
         tile_clicked: tuple[int, int]
     ) -> None:
-        """Teleport the player to the clicked tile, if valid."""
         if tile_clicked not in self.previsu(
                 (player.pos_x, player.pos_y), map.cases):
             return
-        map.cases[(player.pos_x, player.pos_y)] = 0
+        src = self._find_case((player.pos_x, player.pos_y), map.cases)
+        dst = self._find_case(tile_clicked, map.cases)
+        if src is None or dst is None:
+            return
+        src.entity = None
         player.pos_x, player.pos_y = tile_clicked
         player.hp -= 1
         player.pa -= self.cost
-        map.cases[(player.pos_x, player.pos_y)] = player
+        dst.entity = player

@@ -3,7 +3,7 @@ from . import constant
 from .map import Map
 from .patterns import Patterns
 from .spells import Spells
-from .entity import Flame, Player, Entity
+from .entity import Flame, Player, Entity, Bolgrot
 
 
 class Game:
@@ -14,6 +14,9 @@ class Game:
     ) -> None:
         self.map: Map = Map()
         self.player: Player = player
+        self.map.place_entity([constant.BASE_PLAYER_POS], self.player)
+        self.map.place_entity([constant.BASE_BOLGROT_POS],
+                              Bolgrot(*constant.BASE_BOLGROT_POS))
         self.patterns: Patterns = Patterns(seed=seed)
         self.spawn_pattern: list[tuple[int, int]] = self.patterns.draw()
         self.previsualiation: list[tuple[int, int]] = []
@@ -48,7 +51,10 @@ class Game:
         self.previsualiation = []
 
     def end_turn(self) -> None:
-        self.map.place_flames(self.spawn_pattern)
+        if len(self.spawn_pattern) == 0:
+            return
+        for pos in self.spawn_pattern:
+            self.map.place_entity([pos], Flame(pos[0], pos[1]))
         self.spawn_pattern = self.patterns.draw()
         self.previsualiation = []
         self.turn += 1

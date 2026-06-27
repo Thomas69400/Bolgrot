@@ -1,3 +1,6 @@
+from __future__ import annotations
+import os
+import pygame
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -55,11 +58,76 @@ class Spells(ABC):
         self.effects: list[str] = effects
         self.type_spell: list[tuple[TypeSpell, int]] = type_spell
         self.line_of_sight: bool = line_of_sight
-        self.sprite = sprite
+        self._image: pygame.Surface | None = None
 
     @abstractmethod
     def play(self):
         pass
+
+    @property
+    def image(self) -> pygame.Surface:
+        if self._image is None:
+            self._image = pygame.image.load(
+                os.path.join("./src/sprites_png", self.sprite))
+        return self._image
+
+    def contains(
+        self,
+        mouse_x: int,
+        mouse_y: int,
+        x: int,
+        y: int,
+    ) -> bool:
+        img = self.image
+        return (x <= mouse_x < x + img.get_width()
+                and y <= mouse_y < y + img.get_height())
+
+    def _draw_tooltip(
+        self,
+        screen: pygame.Surface,
+        pos_x: int,
+        pos_y: int,
+        font_title: pygame.font.Font,
+        font_txt: pygame.font.Font,
+    ) -> None:
+        from .. import constant
+        height_rect = 300
+        pygame.draw.rect(screen, constant.BACKGROUND_POPUP,
+                         [pos_x, pos_y - height_rect, 400, height_rect])
+        screen.blit(
+            font_title.render(self.name, True, (255, 255, 255)),
+            (pos_x, pos_y - height_rect),
+        )
+        screen.blit(
+            font_txt.render(f"Cost: {self.cost} AP", True, (255, 255, 255)),
+            (pos_x, pos_y - height_rect + 50),
+        )
+        for i, e in enumerate(self.effects):
+            screen.blit(
+                font_txt.render(str(e), True, (255, 255, 255)),
+                (pos_x,
+                 pos_y - height_rect + 100 + font_txt.get_height() * i),
+            )
+        for i, d in enumerate(self.description.split(".")):
+            screen.blit(
+                font_txt.render(d, True, (255, 255, 255)),
+                (pos_x,
+                 pos_y - height_rect + 200 + font_txt.get_height() * i),
+            )
+
+    def draw(
+        self,
+        screen: pygame.Surface,
+        x: int,
+        y: int,
+        mouse_x: int,
+        mouse_y: int,
+        font_title: pygame.font.Font,
+        font_txt: pygame.font.Font,
+    ) -> None:
+        if self.contains(mouse_x, mouse_y, x, y):
+            self._draw_tooltip(screen, x, y, font_title, font_txt)
+        screen.blit(self.image, (x, y))
 
     def previsu(
         self,

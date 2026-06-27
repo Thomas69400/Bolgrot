@@ -17,8 +17,6 @@ class Map:
         map_conf: str = constant.MAP_CONF,
     ) -> None:
         self.cases: list[Case] = []
-        self.player_spawn: tuple[int, int] | None = None
-        self.bolgrot_spawn: tuple[int, int] | None = None
         self.parse_map(map_conf)
 
     def parse_map(
