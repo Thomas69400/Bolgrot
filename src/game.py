@@ -35,6 +35,9 @@ class Game:
         if spell_index < 0 or spell_index >= len(self.player.spells):
             return
         spell: Spells = self.player.spells[spell_index]
+        if not spell.is_castable(self.player):
+            self.clear_previsu()
+            return
         self.spell = spell
         self.previsualiation = spell.previsu(
             (self.player.pos_x, self.player.pos_y), self.map.cases)

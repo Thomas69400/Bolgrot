@@ -70,6 +70,11 @@ class Spells(ABC):
         self.line_of_sight: bool = line_of_sight
         self._image: pygame.Surface | None = None
         self.BFS: BFS = bfs
+        self.time_used: int = 0
+
+    def is_castable(self, player: Player) -> bool:
+        """True if the player has enough PA and uses left to cast."""
+        return player.pa >= self.cost and self.time_used < self.max_use
 
     @abstractmethod
     def play(

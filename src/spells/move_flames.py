@@ -42,7 +42,8 @@ class MoveFlames(Spells):
     ) -> None:
         if player.pa < self.cost or self.time_used >= self.max_use:
             return
-        self.attract_flames(map.cases, tile_clicked=tile_clicked, killable=False)
+        self.attract_flames(map.cases, tile_clicked=tile_clicked,
+                            killable=False)
         player.hp -= 5
         player.pa -= self.cost
         self.time_used += 1

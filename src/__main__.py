@@ -50,6 +50,8 @@ if __name__ == "__main__":
                 if event.key == pygame.K_SPACE:
                     timer_sec = constant.TIME_TURN
                     game.end_turn()
+                if event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
+                    game.select_spell(event.key - pygame.K_1)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
