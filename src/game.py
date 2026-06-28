@@ -39,7 +39,7 @@ class Game:
 
     def reset(self, seed: int | None = None) -> None:
         """Re-initialise all game state, optionally with a new seed."""
-        self.__init__(seed=seed)
+        self.__init__(self.player, seed=seed)  # type: ignore[misc]
 
     def select_spell(self, spell_index: int) -> None:
         """Select a spell and compute its previsualisation tiles.
@@ -64,7 +64,8 @@ class Game:
         """Play the selected spell on the clicked tile, if valid."""
         if not self.previsualiation or tile_clicked is None:
             return
-
+        if self.spell is None:
+            return
         self.spell.play(self.map, self.player, tile_clicked)
         self.clear_previsu()
 

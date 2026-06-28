@@ -11,9 +11,9 @@ class Player(Entity):
 
     def __init__(
             self,
-            x: int | None = None,
-            y: int | None = None,
-    ):
+            x: int,
+            y: int,
+    ) -> None:
         """Create the player at (x, y) with default HP/AP and no spells.
 
         The spell list is populated by ``Game`` once the map (and therefore
@@ -22,8 +22,8 @@ class Player(Entity):
         super().__init__()
         self.type_entity: TypeEntity = TypeEntity.PLAYER
         self.blocks_sight: bool = False
-        self.pos_x: int | None = x
-        self.pos_y: int | None = y
+        self.pos_x: int = x
+        self.pos_y: int = y
         self.hp: int = 40
         self.base_PA: int = 10
         self.pa: int = self.base_PA

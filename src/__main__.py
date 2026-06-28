@@ -69,15 +69,13 @@ def main() -> None:
                          if s.contains(mouse_x, mouse_y, sx, sy)),
                         None,
                     )
-                    clicked_spell = spell_index is not None
-
-                    if is_on_previsu:
+                    if is_on_previsu and previsu_index is not None:
                         game.play_selected_spell(
                             game.previsualiation[previsu_index])
                     elif renderer.end_turn_button.contains(mouse_x, mouse_y):
                         timer_sec = constant.TIME_TURN
                         game.end_turn()
-                    elif clicked_spell:
+                    elif spell_index is not None:
                         game.select_spell(spell_index)
                     else:
                         game.clear_previsu()

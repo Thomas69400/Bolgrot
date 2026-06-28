@@ -24,17 +24,18 @@ class BFS:
         """
         from collections import deque
 
-        queue = deque([start])
-        visited = {start: None}
+        queue: deque[tuple[int, int]] = deque([start])
+        visited: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
 
         while queue:
             current = queue.popleft()
 
             if current == goal:
-                path = []
-                while current is not None:
-                    path.append(current)
-                    current = visited[current]
+                path: list[tuple[int, int]] = []
+                node: tuple[int, int] | None = current
+                while node is not None:
+                    path.append(node)
+                    node = visited[node]
                 path.pop(-1)
                 return path[-1]
 

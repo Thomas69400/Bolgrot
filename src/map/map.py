@@ -3,11 +3,10 @@ from ..entity import Entity
 from .. import constant
 from ..case import Case, CaseType
 
-SYMBOL_MAP = {
+SYMBOL_MAP: dict[str, CaseType] = {
     '.': CaseType.FREE,
     '#': CaseType.WALL,
     "|": CaseType.EMPTY,
-    "N": None
 }
 
 

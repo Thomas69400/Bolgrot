@@ -29,7 +29,7 @@ class Renderer:
         bx = self.avail_w + (constant.RIGHT_PANEL_W - constant.BUTTON_W) // 2
         by = sh // 2
         self.end_turn_button = Button(screen, font_title, bx, by, "End turn")
-        self.spell_renders: list[tuple[pygame.Surface, int, int]] = []
+        self.spell_renders: list[tuple[Spells, int, int]] = []
 
     @staticmethod
     def _compute_map_offset(
