@@ -1,5 +1,6 @@
 from __future__ import annotations
 from . import constant
+from .BFS import BFS
 from .map import Map
 from .patterns import Patterns
 from .spells import Spells
@@ -14,6 +15,8 @@ class Game:
     ) -> None:
         self.map: Map = Map()
         self.player: Player = player
+        for spell in self.player.spells:
+            spell.BFS = BFS(self.map)
         self.map.place_entity([constant.BASE_PLAYER_POS], self.player)
         self.map.place_entity([constant.BASE_BOLGROT_POS],
                               Bolgrot(*constant.BASE_BOLGROT_POS))
@@ -51,6 +54,10 @@ class Game:
         self.previsualiation = []
 
     def end_turn(self) -> None:
+        self.player.hp -= 1
+        self.player.pa = self.player.base_PA
+        for spell in self.player.spells:
+            spell.next_turn()
         if len(self.spawn_pattern) == 0:
             return
         for pos in self.spawn_pattern:

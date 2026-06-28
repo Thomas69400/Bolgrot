@@ -1,9 +1,10 @@
 from __future__ import annotations
 import pygame
+
 from .button import Button
 from .case import Case
 from . import constant
-from .entity import TypeEntity
+from .entity import TypeEntity, Player
 from .spells import Spells
 
 
@@ -114,3 +115,19 @@ class Renderer:
             s.draw(self.screen, x, self.spell_y, mouse_x, mouse_y,
                    self.font_title, self.font_txt)
             x += s.image.get_width() + constant.SPELL_GAP
+
+    def draw_hp_player(
+        self,
+        player: Player,
+    ) -> None:
+        hp_text = self.font_title.render(
+            f"HP: {player.hp}", True, (255, 255, 255))
+        self.screen.blit(hp_text, (10, 10))
+
+    def draw_ap_player(
+        self,
+        player: Player,
+    ) -> None:
+        ap_text = self.font_title.render(
+            f"AP: {player.pa}", True, (255, 255, 255))
+        self.screen.blit(ap_text, (10, 50))

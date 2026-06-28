@@ -55,12 +55,15 @@ class Map:
         pattern: list[tuple[int, int]],
         entity: Entity
     ) -> None:
+        from ..entity import Player
         if not isinstance(entity, Entity):
             raise ValueError(
                 "Entity must be an instance of Bolgrot or Player.")
         for x, y in pattern:
             for case in self.cases:
                 if (case.x, case.y) == (x, y):
+                    if isinstance(case.entity, Player):
+                        return
                     case.entity = entity
                     return
         raise ValueError(

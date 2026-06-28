@@ -3,6 +3,15 @@ import os
 import pygame
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import TYPE_CHECKING
+
+from ..BFS import BFS
+
+
+if TYPE_CHECKING:
+    from ..entity import Player
+    from ..map import Map
+    from ..case import Case
 
 
 class Direction(Enum):
@@ -46,6 +55,7 @@ class Spells(ABC):
             max_use: int,
             effects: list[str],
             type_spell: list[tuple[TypeSpell, int]],
+            bfs: BFS,
             line_of_sight: bool = True,
             sprite=None
     ):
@@ -59,9 +69,21 @@ class Spells(ABC):
         self.type_spell: list[tuple[TypeSpell, int]] = type_spell
         self.line_of_sight: bool = line_of_sight
         self._image: pygame.Surface | None = None
+        self.BFS: BFS = bfs
 
     @abstractmethod
-    def play(self):
+    def play(
+        self,
+        map: Map,
+        player: Player,
+        tile_clicked: tuple[int, int],
+    ) -> None:
+        pass
+
+    @abstractmethod
+    def next_turn(
+        self,
+    ) -> None:
         pass
 
     @property
@@ -200,7 +222,11 @@ class Spells(ABC):
         except Exception:
             return []
 
-    def _find_case(self, pos: tuple, cases: list):
+    def _find_case(
+        self,
+        pos: tuple,
+        cases: list
+    ) -> Case | None:
         for case in cases:
             if (case.x, case.y) == pos:
                 return case
@@ -240,3 +266,102 @@ class Spells(ABC):
         cases: list
     ) -> bool:
         return self._find_case(pos_spell, cases) is not None
+
+    def attract_flames(
+        self,
+        cases: list[Case],
+        tile_clicked: tuple[int, int] = None,
+        player: Player = None,
+        killable: bool = True
+    ) -> None:
+        """Attract Flames towards the player position for 1 case."""
+        from ..entity import Flame, Bolgrot, Player
+        from ..case import CaseType
+        if tile_clicked is not None:
+            pos_x, pos_y = tile_clicked
+        elif player is not None:
+            pos_x, pos_y = player.pos_x, player.pos_y
+        else:
+            raise ValueError(
+                "Either tile_clicked or player must be provided.")
+
+        flame_cases = [
+            case for case in cases
+            if isinstance(case.entity, Flame)
+            and (case.x, case.y) != (pos_x, pos_y)
+        ]
+        flame_cases.sort(
+            key=lambda c: abs(c.x - pos_x) + abs(c.y - pos_y)
+        )
+        for case in flame_cases:
+            dx = pos_x - case.x
+            dy = pos_y - case.y
+            sx = (dx > 0) - (dx < 0)
+            sy = (dy > 0) - (dy < 0)
+            if abs(dx) > abs(dy):
+                step = (case.x + sx, case.y)
+            elif abs(dy) > abs(dx):
+                step = (case.x, case.y + sy)
+            else:
+                step = (case.x + sx, case.y + sy)
+            new_case = self._find_case(step, cases)
+            if new_case is None or new_case.case_type == CaseType.WALL:
+                path = self.BFS.find_path(
+                    (case.x, case.y),
+                    (pos_x, pos_y)
+                )
+                new_case = self._find_case(path, cases) \
+                    if path is not None else None
+            if new_case is None or new_case.case_type == CaseType.WALL:
+                continue
+            if isinstance(new_case.entity, Bolgrot):
+                continue
+            elif isinstance(new_case.entity, (Flame, Player)) and killable:
+                player.hp = 0
+            elif new_case.entity is None:
+                new_case.entity = case.entity
+                case.entity = None
+
+    def push_flames(
+        self,
+        player: Player,
+        cases: list[Case],
+    ) -> None:
+        """Push Flames away from the player position for 1 case if
+        they are next to the player. (diagonals included)"""
+        from ..entity import Flame, Bolgrot, Player
+        from ..case import CaseType
+        flame_cases = [
+            case for case in cases
+            if isinstance(case.entity, Flame)
+            and (case.x, case.y) != (player.pos_x, player.pos_y)
+            and abs(case.x - player.pos_x) <= 1
+            and abs(case.y - player.pos_y) <= 1
+        ]
+        for case in flame_cases:
+            dx = case.x - player.pos_x
+            dy = case.y - player.pos_y
+            sx = (dx > 0) - (dx < 0)
+            sy = (dy > 0) - (dy < 0)
+            if abs(dx) > abs(dy):
+                step = (case.x + sx, case.y)
+            elif abs(dy) > abs(dx):
+                step = (case.x, case.y + sy)
+            else:
+                step = (case.x + sx, case.y + sy)
+            new_case = self._find_case(step, cases)
+            if new_case is None or new_case.case_type == CaseType.WALL:
+                path = self.BFS.find_path(
+                    (case.x, case.y),
+                    (player.pos_x, player.pos_y)
+                )
+                new_case = self._find_case(path, cases)
+            if new_case is None or new_case.case_type == CaseType.WALL:
+                continue
+            if isinstance(new_case.entity, Bolgrot):
+                continue
+            elif isinstance(new_case.entity, (Flame, Player)):
+                player.hp = 0
+            elif new_case.entity is None:
+                new_case.entity = case.entity
+                case.entity = None

@@ -42,11 +42,14 @@ if __name__ == "__main__":
                 else:
                     pygame.time.set_timer(timer_event, 1000)
                     timer_sec = constant.TIME_TURN
-                    # game.end_turn()
+                    game.end_turn()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                if event.key == pygame.K_SPACE:
+                    timer_sec = constant.TIME_TURN
+                    game.end_turn()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -78,7 +81,12 @@ if __name__ == "__main__":
         renderer.end_turn_button.draw(mouse_x, mouse_y)
         renderer.draw_timer(timer_text)
         renderer.draw_spells(mouse_x, mouse_y, game.player.spells)
+        renderer.draw_hp_player(game.player)
+        renderer.draw_ap_player(game.player)
 
+        if game.player.hp <= 0:
+            running = False
+            print("Game Over: Player is dead.")
         pygame.display.update()
         pygame.display.flip()
         clock.tick(60)

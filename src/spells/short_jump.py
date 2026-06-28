@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from .spells import Spells, TypeSpell
+from ..BFS import BFS
 
 if TYPE_CHECKING:
     from ..entity import Player
@@ -16,12 +17,13 @@ class ShortJump(Spells):
             max_use: int = 99,
             effects: list[str] = [],
             type_spell: list[tuple[TypeSpell, int]] = [],
+            bfs: BFS | None = None,
             line_of_sight: bool = True,
             sprite: str = "short_jump.png"
     ):
         super().__init__(
             name, description, cost, max_use,
-            effects, type_spell, line_of_sight, sprite)
+            effects, type_spell, bfs, line_of_sight, sprite)
         self.effects: list[str] = [
             "Teleport to the tile",
             "Attract 1 tile",
@@ -44,15 +46,30 @@ class ShortJump(Spells):
         player: Player,
         tile_clicked: tuple[int, int]
     ) -> None:
+        if player.pa < self.cost:
+            return
         if tile_clicked not in self.previsu(
                 (player.pos_x, player.pos_y), map.cases):
             return
+        from ..entity import Flame
         src = self._find_case((player.pos_x, player.pos_y), map.cases)
         dst = self._find_case(tile_clicked, map.cases)
+        killed_flame = False
         if src is None or dst is None:
             return
+        if isinstance(dst.entity, Flame):
+            killed_flame = True
+            player.hp += 1
         src.entity = None
         player.pos_x, player.pos_y = tile_clicked
         player.hp -= 1
         player.pa -= self.cost
         dst.entity = player
+        if killed_flame:
+            self.push_flames(player, map.cases)
+        self.attract_flames(map.cases, player=player)
+
+    def next_turn(
+        self,
+    ) -> None:
+        pass
