@@ -1,3 +1,5 @@
+from importlib.resources import files
+
 # 37
 GRID_MAX_X = 37
 # 34
@@ -26,4 +28,7 @@ SPELL_GAP = 10
 # IN SECONDS
 TIME_TURN = 120
 
-MAP_CONF = "./src/config/bolgrot.map"
+# Package-data paths resolved relative to the installed `src` package so they
+# work regardless of the current working directory.
+MAP_CONF = str(files("src") / "config" / "bolgrot.map")
+SPRITES_DIR = str(files("src") / "sprites_png")

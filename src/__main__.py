@@ -6,7 +6,12 @@ from .actions import on_previsu_click
 from .renderer import Renderer
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run the game: init pygame, then loop over input, update and draw.
+
+    Serves as both the ``python -m src`` entry and the ``bolgrot`` console
+    script. Returns when the window is closed or the player dies.
+    """
     pygame.init()
     screen: pygame.Surface = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     clock: pygame.time.Clock = pygame.time.Clock()
@@ -94,3 +99,7 @@ if __name__ == "__main__":
         clock.tick(60)
 
     pygame.quit()
+
+
+if __name__ == "__main__":
+    main()

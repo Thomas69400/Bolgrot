@@ -10,18 +10,21 @@ if TYPE_CHECKING:
 
 
 class MoveFlames(Spells):
+    """Attract all flames one tile toward a target; costs 5 HP, can't kill."""
+
     def __init__(
             self,
             name: str = "Inaction",
             description: str = "",
             cost: int = 1,
             max_use: int = 1,
-            effects: list[str] = [],
-            type_spell: list[tuple[TypeSpell, int]] = [],
+            effects: list[str] | None = None,
+            type_spell: list[tuple[TypeSpell, int]] | None = None,
             bfs: BFS | None = None,
             line_of_sight: bool = False,
             sprite: str = "inaction.png"
     ):
+        """Configure the spell with DIAGONAL range 1 and no line-of-sight."""
         super().__init__(
             name, description, cost, max_use,
             effects, type_spell, bfs, line_of_sight, sprite)
@@ -40,6 +43,11 @@ class MoveFlames(Spells):
         player: Player,
         tile_clicked: tuple[int, int],
     ) -> None:
+        """Attract every flame one tile toward ``tile_clicked``.
+
+        No-op unless affordable and uses remain. Flames cannot kill the
+        caster here (``killable=False``); the caster loses 5 HP and a use.
+        """
         if player.pa < self.cost or self.time_used >= self.max_use:
             return
         self.attract_flames(map.cases, tile_clicked=tile_clicked,
@@ -49,4 +57,5 @@ class MoveFlames(Spells):
         self.time_used += 1
 
     def next_turn(self):
+        """Reset the per-turn usage count so the spell can be cast again."""
         self.time_used = 0

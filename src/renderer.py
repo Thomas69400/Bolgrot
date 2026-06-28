@@ -9,13 +9,16 @@ from .spells import Spells
 
 
 class Renderer:
+    """Holds rendering state and draws the map, entities, HUD and spells."""
+
     def __init__(
         self,
         screen: pygame.Surface,
         font_title: pygame.font.Font,
         font_txt: pygame.font.Font,
-        cases: list[Case],
+        cases: dict[tuple[int, int], Case],
     ):
+        """Cache fonts/surface, compute the map offset and lay out the UI."""
         self.screen = screen
         self.font_title = font_title
         self.font_txt = font_txt
@@ -30,36 +33,47 @@ class Renderer:
 
     @staticmethod
     def _compute_map_offset(
-        cases: list[Case],
+        cases: dict[tuple[int, int], Case],
         screen_w: int,
         screen_h: int,
         spell_bar_h: int = 120,
     ) -> tuple[int, int]:
+        """Return the iso-origin screen offset that centres the map.
+
+        Centres the map's isometric bounding box within the available area
+        (screen minus the right panel and the bottom spell bar).
+        """
         iso_xs = [(case.x - case.y) * constant.CASE_WIDTH //
-                  2 for case in cases]
+                  2 for case in cases.values()]
         iso_ys = [(case.x + case.y) * constant.CASE_HEIGHT //
-                  2 for case in cases]
+                  2 for case in cases.values()]
         iso_cx = (min(iso_xs) + max(iso_xs)) // 2
         iso_cy = (min(iso_ys) + max(iso_ys)) // 2
         avail_w = screen_w - constant.RIGHT_PANEL_W
         avail_h = screen_h - spell_bar_h
         return avail_w // 2 - iso_cx, avail_h // 2 - iso_cy
 
-    def _map_screen_bottom(self, cases: list[Case]) -> int:
+    def _map_screen_bottom(
+        self, cases: dict[tuple[int, int], Case]
+    ) -> int:
+        """Return the screen y of the map's lowest point (for placing the bar).
+        """
         iso_ys = [(case.x + case.y) * constant.CASE_HEIGHT //
-                  2 for case in cases]
+                  2 for case in cases.values()]
         return self.offset[1] + max(iso_ys) + constant.CASE_HEIGHT // 2
 
     def draw_map(
         self,
         mouse_x: int,
         mouse_y: int,
-        cases: list[Case],
+        cases: dict[tuple[int, int], Case],
         previsualiation: list[tuple],
         spawn_pattern: list[tuple],
         show_coords: bool = False,
     ) -> None:
-        for case in cases:
+        """Draw every cell, colouring previsu/spawn tiles and the hovered one.
+        """
+        for case in cases.values():
             x, y = case.x, case.y
             if (x, y) in previsualiation:
                 color = constant.PREVISU_COLOR
@@ -75,8 +89,11 @@ class Renderer:
             case.draw(self.screen, self.offset, color,
                       self.font_txt, show_coords)
 
-    def draw_entities(self, cases: list[Case]) -> None:
-        for case in cases:
+    def draw_entities(
+        self, cases: dict[tuple[int, int], Case]
+    ) -> None:
+        """Draw a coloured marker for each occupied cell's entity."""
+        for case in cases.values():
             v = case.entity
             if v is None:
                 continue
@@ -93,6 +110,7 @@ class Renderer:
                     pygame.draw.circle(self.screen, [255, 0, 0], (cx, cy), 15)
 
     def draw_timer(self, timer_text: pygame.Surface) -> None:
+        """Blit the pre-rendered turn-timer text above the end-turn button."""
         btn = self.end_turn_button
         self.screen.blit(
             timer_text,
@@ -106,6 +124,11 @@ class Renderer:
         mouse_y: int,
         spells: list[Spells],
     ) -> None:
+        """Lay out and draw the spell bar; cache each icon's rect.
+
+        Records ``(spell, x, y)`` in ``self.spell_renders`` so the event loop
+        can hit-test clicks/hovers against the drawn icons.
+        """
         total_w = (sum(s.image.get_width() for s in spells) +
                    constant.SPELL_GAP * max(0, len(spells) - 1))
         x = (self.avail_w - total_w) // 2
@@ -120,6 +143,7 @@ class Renderer:
         self,
         player: Player,
     ) -> None:
+        """Draw the player's current HP in the top-left corner."""
         hp_text = self.font_title.render(
             f"HP: {player.hp}", True, (255, 255, 255))
         self.screen.blit(hp_text, (10, 10))
@@ -128,6 +152,7 @@ class Renderer:
         self,
         player: Player,
     ) -> None:
+        """Draw the player's current AP below the HP readout."""
         ap_text = self.font_title.render(
             f"AP: {player.pa}", True, (255, 255, 255))
         self.screen.blit(ap_text, (10, 50))

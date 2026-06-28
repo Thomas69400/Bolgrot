@@ -1,16 +1,24 @@
-from ..BFS import BFS
-from ..map import Map
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from .entity import Entity, TypeEntity
-from ..spells import Spells, LongJump, ShortJump, MoveFlames
+
+if TYPE_CHECKING:
+    from ..spells import Spells
 
 
 class Player(Entity):
+    """The controllable character: tracks position, HP, AP and spells."""
+
     def __init__(
             self,
-            x: int = None,
-            y: int = None,
-            map: Map = None
+            x: int | None = None,
+            y: int | None = None,
     ):
+        """Create the player at (x, y) with default HP/AP and no spells.
+
+        The spell list is populated by ``Game`` once the map (and therefore
+        the BFS pathfinder) exists.
+        """
         super().__init__()
         self.type_entity: TypeEntity = TypeEntity.PLAYER
         self.blocks_sight: bool = False
@@ -19,8 +27,4 @@ class Player(Entity):
         self.hp: int = 40
         self.base_PA: int = 10
         self.pa: int = self.base_PA
-        self.spells: list[Spells] = [
-            ShortJump(bfs=BFS(map) if map is not None else None),
-            LongJump(bfs=BFS(map) if map is not None else None),
-            MoveFlames(bfs=BFS(map) if map is not None else None)
-        ]
+        self.spells: list[Spells] = []

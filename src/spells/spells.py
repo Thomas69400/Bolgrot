@@ -6,15 +6,17 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from ..BFS import BFS
+from ..entity import Entity, Flame, Bolgrot, Player
+from ..case import CaseType
 
 
 if TYPE_CHECKING:
-    from ..entity import Player
     from ..map import Map
     from ..case import Case
 
 
 class Direction(Enum):
+    """Unit step vectors plus the orthogonal/diagonal direction groups."""
     NORTH: tuple = (-1, 0)
     EAST: tuple = (0, 1)
     SOUTH: tuple = (1, 0)
@@ -41,32 +43,40 @@ class Direction(Enum):
 
 
 class TypeSpell(Enum):
+    """Range shape of a spell: straight LINE, DIAGONAL or FULL area."""
     LINE: int = 2
     DIAGONAL: int = 4
     FULL: int = 8
 
 
 class Spells(ABC):
+    """Abstract spell: cost/usage, range shape, targeting and flame logic."""
+
     def __init__(
             self,
             name: str,
             description: str,
             cost: int,
             max_use: int,
-            effects: list[str],
-            type_spell: list[tuple[TypeSpell, int]],
+            effects: list[str] | None,
+            type_spell: list[tuple[TypeSpell, int]] | None,
             bfs: BFS,
             line_of_sight: bool = True,
             sprite=None
     ):
+        """Store the spell's stats, range shape, BFS helper and sprite name.
+
+        ``effects``/``type_spell`` default to empty lists when ``None``.
+        """
         super().__init__()
         self.sprite = sprite
         self.name: str = name
         self.description: str = description
         self.cost: int = cost
         self.max_use: int = max_use
-        self.effects: list[str] = effects
-        self.type_spell: list[tuple[TypeSpell, int]] = type_spell
+        self.effects: list[str] = effects if effects is not None else []
+        self.type_spell: list[tuple[TypeSpell, int]] = \
+            type_spell if type_spell is not None else []
         self.line_of_sight: bool = line_of_sight
         self._image: pygame.Surface | None = None
         self.BFS: BFS = bfs
@@ -83,19 +93,23 @@ class Spells(ABC):
         player: Player,
         tile_clicked: tuple[int, int],
     ) -> None:
+        """Apply the spell's effect for a cast on ``tile_clicked``."""
         pass
 
     @abstractmethod
     def next_turn(
         self,
     ) -> None:
+        """Reset per-turn state (e.g. usage counters) at end of turn."""
         pass
 
     @property
     def image(self) -> pygame.Surface:
+        """Lazily load and cache the spell's sprite surface."""
         if self._image is None:
+            from .. import constant
             self._image = pygame.image.load(
-                os.path.join("./src/sprites_png", self.sprite))
+                os.path.join(constant.SPRITES_DIR, self.sprite))
         return self._image
 
     def contains(
@@ -105,6 +119,7 @@ class Spells(ABC):
         x: int,
         y: int,
     ) -> bool:
+        """Return True if the mouse is over the spell icon drawn at (x, y)."""
         img = self.image
         return (x <= mouse_x < x + img.get_width()
                 and y <= mouse_y < y + img.get_height())
@@ -117,6 +132,7 @@ class Spells(ABC):
         font_title: pygame.font.Font,
         font_txt: pygame.font.Font,
     ) -> None:
+        """Draw the hover tooltip with the name, AP cost, effects and text."""
         from .. import constant
         height_rect = 300
         pygame.draw.rect(screen, constant.BACKGROUND_POPUP,
@@ -152,6 +168,7 @@ class Spells(ABC):
         font_title: pygame.font.Font,
         font_txt: pygame.font.Font,
     ) -> None:
+        """Blit the spell icon at (x, y), drawing the tooltip while hovered."""
         if self.contains(mouse_x, mouse_y, x, y):
             self._draw_tooltip(screen, x, y, font_title, font_txt)
         screen.blit(self.image, (x, y))
@@ -161,6 +178,11 @@ class Spells(ABC):
         pos_player: tuple[int, int],
         cases: dict
     ) -> list[tuple]:
+        """Return the tiles this spell can target from ``pos_player``.
+
+        Combines the reachable tiles for each (shape, range) in
+        ``type_spell`` (line / diagonal), honouring line-of-sight.
+        """
         all_pos: list[tuple] = []
         for type_s in self.type_spell:
             t, r = type_s
@@ -187,22 +209,24 @@ class Spells(ABC):
         cases: dict,
         range_s: int
     ) -> list[tuple]:
+        """Return reachable tiles up to ``range_s`` along the 4 orthogonals.
+
+        Stops including tiles past the map edge, a sight blocker, or an
+        unkillable entity (line-of-sight permitting).
+        """
         x, y = pos_player
         possible_pos: list[tuple] = []
-        try:
-            for direction in Direction.DIRECTIONS_LINE.value:
-                dx, dy = direction
-                nx, ny = x, y
-                for i in range(range_s):
-                    nx, ny = nx + dx, ny + dy
-                    if self.is_in_map((nx, ny), cases) and \
-                            not self.is_blocked_by_sight(
-                                (nx, ny), cases, direction) and \
-                       self.is_entity_killable((nx, ny), cases):
-                        possible_pos.append((nx, ny))
-            return possible_pos
-        except Exception:
-            return []
+        for direction in Direction.DIRECTIONS_LINE.value:
+            dx, dy = direction
+            nx, ny = x, y
+            for _ in range(range_s):
+                nx, ny = nx + dx, ny + dy
+                if self.is_in_map((nx, ny), cases) and \
+                        not self.is_blocked_by_sight(
+                            (nx, ny), cases, direction) and \
+                   self.is_entity_killable((nx, ny), cases):
+                    possible_pos.append((nx, ny))
+        return possible_pos
 
     def make_diag(
         self,
@@ -210,39 +234,42 @@ class Spells(ABC):
         cases: dict,
         range_s: int
     ) -> list[tuple]:
+        """Return reachable tiles up to ``range_s`` along the 4 diagonals.
+
+        Same edge/sight/killable rules as ``make_line``.
+        """
         x, y = pos_player
         possible_pos: list[tuple] = []
-        try:
-            for direction in Direction.DIRECTIONS_DIAGONALS.value:
-                dx, dy = direction
-                nx, ny = x, y
-                for i in range(range_s):
-                    nx, ny = nx + dx, ny + dy
-                    if self.is_in_map((nx, ny), cases) and \
-                            not self.is_blocked_by_sight(
-                                (nx, ny), cases, direction) and \
-                       self.is_entity_killable((nx, ny), cases):
-                        possible_pos.append((nx, ny))
-            return possible_pos
-        except Exception:
-            return []
+        for direction in Direction.DIRECTIONS_DIAGONALS.value:
+            dx, dy = direction
+            nx, ny = x, y
+            for _ in range(range_s):
+                nx, ny = nx + dx, ny + dy
+                if self.is_in_map((nx, ny), cases) and \
+                        not self.is_blocked_by_sight(
+                            (nx, ny), cases, direction) and \
+                   self.is_entity_killable((nx, ny), cases):
+                    possible_pos.append((nx, ny))
+        return possible_pos
 
     def _find_case(
         self,
         pos: tuple,
-        cases: list
+        cases: dict[tuple[int, int], Case]
     ) -> Case | None:
-        for case in cases:
-            if (case.x, case.y) == pos:
-                return case
-        return None
+        """Return the cell at ``pos`` (O(1) dict lookup), or ``None``."""
+        return cases.get(pos)
 
     def is_entity_killable(
         self,
         pos_spell: tuple,
         cases: list
     ) -> bool:
-        from ..entity import Entity
+        """Return True if ``pos_spell`` may be targeted past its entity.
+
+        With line-of-sight off, always True. Otherwise an entity there
+        blocks targeting beyond it unless it is killable.
+        """
         if self.line_of_sight is False:
             return True
         c = self._find_case(pos_spell, cases)
@@ -256,6 +283,11 @@ class Spells(ABC):
         cases: list,
         direction: Direction,
     ) -> bool:
+        """Return True if the tile behind ``pos_spell`` blocks the sight line.
+
+        Looks one step back along ``direction``; an entity there with
+        ``blocks_sight`` cuts the line. Always False when line-of-sight off.
+        """
         if self.line_of_sight is False:
             return False
 
@@ -270,18 +302,23 @@ class Spells(ABC):
         pos_spell: tuple,
         cases: list
     ) -> bool:
+        """Return True if ``pos_spell`` corresponds to a cell on the map."""
         return self._find_case(pos_spell, cases) is not None
 
     def attract_flames(
         self,
-        cases: list[Case],
+        cases: dict[tuple[int, int], Case],
         tile_clicked: tuple[int, int] = None,
         player: Player = None,
         killable: bool = True
     ) -> None:
-        """Attract Flames towards the player position for 1 case."""
-        from ..entity import Flame, Bolgrot, Player
-        from ..case import CaseType
+        """Move every flame one tile toward the target, nearest-first.
+
+        The target is ``tile_clicked`` or the player's position (one is
+        required). Each flame steps along its dominant axis (diagonally when
+        equal) so it stays in its quadrant, falling back to BFS around walls.
+        When ``killable`` is set, a flame reaching the player kills them.
+        """
         if tile_clicked is not None:
             pos_x, pos_y = tile_clicked
         elif player is not None:
@@ -291,7 +328,7 @@ class Spells(ABC):
                 "Either tile_clicked or player must be provided.")
 
         flame_cases = [
-            case for case in cases
+            case for case in cases.values()
             if isinstance(case.entity, Flame)
             and (case.x, case.y) != (pos_x, pos_y)
         ]
@@ -330,14 +367,12 @@ class Spells(ABC):
     def push_flames(
         self,
         player: Player,
-        cases: list[Case],
+        cases: dict[tuple[int, int], Case],
     ) -> None:
         """Push Flames away from the player position for 1 case if
         they are next to the player. (diagonals included)"""
-        from ..entity import Flame, Bolgrot, Player
-        from ..case import CaseType
         flame_cases = [
-            case for case in cases
+            case for case in cases.values()
             if isinstance(case.entity, Flame)
             and (case.x, case.y) != (player.pos_x, player.pos_y)
             and abs(case.x - player.pos_x) <= 1

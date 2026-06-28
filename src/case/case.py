@@ -6,12 +6,15 @@ from .. import constant
 
 
 class CaseType(Enum):
+    """Walkability of a cell: free, a sight/movement-blocking wall, or void."""
     FREE = 0
     WALL = 1
     EMPTY = 2
 
 
 class Case:
+    """A single grid cell holding its coordinates, type and optional entity."""
+
     def __init__(
         self,
         x: int,
@@ -19,6 +22,7 @@ class Case:
         entity: Entity | None = None,
         case_type: CaseType = CaseType.FREE,
     ) -> None:
+        """Create a cell at grid (x, y) with an optional entity and type."""
         self.x = x
         self.y = y
         self.entity: Entity | None = entity
@@ -30,6 +34,11 @@ class Case:
         mouse_y: int,
         offset: tuple[int, int],
     ) -> bool:
+        """Return True if the mouse (screen px) maps to this cell's grid pos.
+
+        Inverts the isometric projection using ``offset`` (the screen pixel
+        position of iso origin) to recover grid coordinates.
+        """
         rx = mouse_x - offset[0]
         ry = mouse_y - offset[1]
         half_w = constant.CASE_WIDTH / 2
@@ -46,6 +55,12 @@ class Case:
         font: pygame.font.Font | None = None,
         show_coords: bool = False,
     ) -> None:
+        """Draw this cell as an isometric diamond, optionally labelled.
+
+        ``offset`` is the screen pixel position of iso origin; ``color`` fills
+        the diamond and a black outline is drawn on top. When ``show_coords``
+        is set and a ``font`` is given, the grid coordinates are blitted.
+        """
         iso_x = int((self.x - self.y) * (constant.CASE_WIDTH / 2))
         iso_y = int((self.x + self.y) * (constant.CASE_HEIGHT / 2))
         cx = iso_x + offset[0]

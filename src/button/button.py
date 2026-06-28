@@ -4,6 +4,8 @@ from .. import constant
 
 
 class Button:
+    """A fixed-size labelled rectangle that hit-tests and draws itself."""
+
     def __init__(
         self,
         screen: pygame.Surface,
@@ -12,6 +14,7 @@ class Button:
         y: int,
         label: str,
     ):
+        """Store the surface, font, top-left position and label text."""
         self.screen = screen
         self.font = font
         self.x = x
@@ -19,10 +22,12 @@ class Button:
         self.label = label
 
     def contains(self, mouse_x: int, mouse_y: int) -> bool:
+        """Return True if the mouse position is inside the button's rect."""
         return (self.x <= mouse_x < self.x + constant.BUTTON_W
                 and self.y <= mouse_y < self.y + constant.BUTTON_H)
 
     def draw(self, mouse_x: int, mouse_y: int) -> None:
+        """Draw the button, highlighting it while the mouse hovers over it."""
         color = [73, 161, 108] if self.contains(
             mouse_x, mouse_y) else [123, 161, 58]
         pygame.draw.rect(

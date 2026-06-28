@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from .spells import Spells, TypeSpell
 from ..BFS import BFS
+from ..entity import Flame
 
 if TYPE_CHECKING:
     from ..entity import Player
@@ -9,18 +10,22 @@ if TYPE_CHECKING:
 
 
 class ShortJump(Spells):
+    """Teleport one tile in a line; lose 1 HP and attract all flames."""
+
     def __init__(
             self,
             name: str = "Astral leap",
             description: str = "",
             cost: int = 1,
             max_use: int = 99,
-            effects: list[str] = [],
-            type_spell: list[tuple[TypeSpell, int]] = [],
+            effects: list[str] | None = None,
+            type_spell: list[tuple[TypeSpell, int]] | None = None,
             bfs: BFS | None = None,
             line_of_sight: bool = True,
             sprite: str = "short_jump.png"
     ):
+        """Configure the spell with LINE range 1 and its effects/description.
+        """
         super().__init__(
             name, description, cost, max_use,
             effects, type_spell, bfs, line_of_sight, sprite)
@@ -46,12 +51,17 @@ class ShortJump(Spells):
         player: Player,
         tile_clicked: tuple[int, int]
     ) -> None:
+        """Teleport the player to ``tile_clicked`` and resolve its effects.
+
+        No-op unless affordable and ``tile_clicked`` is a valid target.
+        Costs 1 HP; landing on a flame kills it and restores 1 HP (then
+        pushes flames); afterwards all flames are attracted to the player.
+        """
         if player.pa < self.cost:
             return
         if tile_clicked not in self.previsu(
                 (player.pos_x, player.pos_y), map.cases):
             return
-        from ..entity import Flame
         src = self._find_case((player.pos_x, player.pos_y), map.cases)
         dst = self._find_case(tile_clicked, map.cases)
         killed_flame = False
@@ -72,4 +82,5 @@ class ShortJump(Spells):
     def next_turn(
         self,
     ) -> None:
+        """No per-turn state to reset for this spell."""
         pass

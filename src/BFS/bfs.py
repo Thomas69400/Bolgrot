@@ -3,10 +3,13 @@ from ..case import CaseType
 
 
 class BFS:
+    """4-directional BFS pathfinder bound to a ``Map``."""
+
     def __init__(
         self,
         map: Map
     ):
+        """Store the map whose cells define walkable positions."""
         self.map: Map = map
 
     def find_path(
@@ -14,7 +17,11 @@ class BFS:
         start: tuple[int, int],
         goal: tuple[int, int]
     ) -> tuple[int, int] | None:
-        """Find the shortest path from start to goal using BFS."""
+        """Return the first step of the shortest path from start to goal.
+
+        Runs BFS and, on success, returns the single tile to move to next
+        (the step adjacent to ``start``), or ``None`` if no path exists.
+        """
         from collections import deque
 
         queue = deque([start])
@@ -61,8 +68,5 @@ class BFS:
         pos: tuple[int, int]
     ) -> bool:
         """Check if the position is within the map and not blocked."""
-        x, y = pos
-        for case in self.map.cases:
-            if (case.x, case.y) == (x, y):
-                return case.case_type != CaseType.WALL
-        return False
+        case = self.map.cases.get(pos)
+        return case is not None and case.case_type != CaseType.WALL

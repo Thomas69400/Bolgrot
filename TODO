@@ -1,4 +1,10 @@
-Check move_flames.play + fix the import of Bolgrot
 Implement more flames patterns spawns
 
 Make NEAT
+
+ High     │ Add README/LICENSE; remove unused pydantic; fix the missing-readme build reference                  │
+
+  ├──────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Medium   │ Linting/formatting gate (ruff/black/mypy) in pre-commit + CI                                        │
+  ├──────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Low      │ Swap print for logging; docstrings; pin pygame version 
