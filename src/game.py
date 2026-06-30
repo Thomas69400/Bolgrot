@@ -97,6 +97,8 @@ class Game:
                 if self.waves_spawned < constant.NB_WAVES
                 else []
             )
+        if self.waves_spawned >= 6:
+            self.player.hp -= 1
         self.clear_previsu()
         self._check_end()
 
