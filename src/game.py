@@ -93,12 +93,19 @@ class Game:
             self.waves_spawned += 1
             self.turn += 1
             self.spawn_pattern = (
-                self.patterns.draw()
+                self.patterns.draw(self._occupied_tiles())
                 if self.waves_spawned < constant.NB_WAVES
                 else []
             )
         self.clear_previsu()
         self._check_end()
+
+    def _occupied_tiles(self) -> set[tuple[int, int]]:
+        """Tiles currently holding a flame or the player."""
+        return {
+            pos for pos, case in self.map.cases.items()
+            if isinstance(case.entity, (Flame, Player))
+        }
 
     def _flames_remain(self) -> bool:
         """Whether any flame is still on the map."""

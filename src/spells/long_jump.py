@@ -77,7 +77,7 @@ class LongJump(Spells):
         self.time_used += 1
         if killed_flame:
             self.push_flames(player, map.cases)
-        self.attract_flames(map.cases, player=player)
+        self.attract_flames(map.cases, player=player, killable=False)
 
     def next_turn(
         self

@@ -9,7 +9,8 @@ class Patterns:
     """Pool of flame spawn patterns, drawn at random without replacement.
 
     A pattern is the union of two "atoms" — fixed 3-tile constellations — drawn
-    from a vocabulary loaded from ``patterns.json``. The two atoms must not both
+    from a vocabulary loaded from ``patterns.json``. The two atoms must not
+    both
     belong to the ``east`` region (those four atoms overlap spatially and never
     co-occur in the observed game), which is why only 114 of the C(16, 2) = 120
     atom pairs are legal.
@@ -36,7 +37,6 @@ class Patterns:
             for i, j in _combinations(range(len(cls._atoms)), 2)
             if not (i in east and j in east)
         ]
-        # Fixed set of opening waves (the first wave is always one of these).
         cls._openings = [
             cls._atoms[i] + cls._atoms[j] for i, j in data["openings"]
         ]
@@ -55,12 +55,32 @@ class Patterns:
             self.spawn_patterns.remove(pattern)
         return pattern
 
-    def draw(self) -> list[tuple[int, int]]:
-        """Pick and remove a random pattern; return ``[]`` when exhausted."""
+    def draw(
+        self,
+        occupied: set[tuple[int, int]] | None = None,
+    ) -> list[tuple[int, int]]:
+        """Pick and remove a random pattern; return ``[]`` when exhausted.
+
+        Tiles in ``occupied`` (those already holding a flame or the player)
+        are dropped from the returned wave, so a flame is never spawned on a
+        tile that already has a flame or the player.
+        """
         if not self.spawn_patterns:
             return []
-        pattern = self._rng.choice(self.spawn_patterns)
+        candidates = self.spawn_patterns
+        if occupied:
+            fewest = min(
+                sum(pos in occupied for pos in p)
+                for p in self.spawn_patterns
+            )
+            candidates = [
+                p for p in self.spawn_patterns
+                if sum(pos in occupied for pos in p) == fewest
+            ]
+        pattern = self._rng.choice(candidates)
         self.spawn_patterns.remove(pattern)
+        if occupied:
+            return [pos for pos in pattern if pos not in occupied]
         return pattern
 
     def reset(self) -> None:
