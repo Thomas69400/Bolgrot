@@ -28,7 +28,11 @@ SPELL_GAP = 10
 # IN SECONDS
 TIME_TURN = 120
 
+# Number of flame waves that spawn over a game (exactly this many, no repeats).
+NB_WAVES = 6
+
 # Package-data paths resolved relative to the installed `src` package so they
 # work regardless of the current working directory.
 MAP_CONF = str(files("src") / "config" / "bolgrot.map")
 SPRITES_DIR = str(files("src") / "sprites_png")
+PATTERNS_CONF = str(files("src") / "patterns" / "patterns.json")

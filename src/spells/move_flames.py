@@ -17,7 +17,7 @@ class MoveFlames(Spells):
             name: str = "Inaction",
             description: str = "",
             cost: int = 1,
-            max_use: int = 1,
+            max_use: int = 99,
             effects: list[str] | None = None,
             type_spell: list[tuple[TypeSpell, int]] | None = None,
             bfs: BFS | None = None,

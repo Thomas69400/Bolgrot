@@ -31,11 +31,14 @@ class Game:
         self.map.place_entity([constant.BASE_BOLGROT_POS],
                               Bolgrot(*constant.BASE_BOLGROT_POS))
         self.patterns: Patterns = Patterns(seed=seed)
-        self.spawn_pattern: list[tuple[int, int]] = self.patterns.draw()
+        self.spawn_pattern: list[tuple[int, int]] = \
+            self.patterns.draw_opening()
+        self.waves_spawned: int = 0
         self.previsualiation: list[tuple[int, int]] = []
         self.spell: Spells | None = None
         self.turn: int = 0
         self.done: bool = False
+        self.won: bool = False
 
     def reset(self, seed: int | None = None) -> None:
         """Re-initialise all game state, optionally with a new seed."""
@@ -68,24 +71,48 @@ class Game:
             return
         self.spell.play(self.map, self.player, tile_clicked)
         self.clear_previsu()
+        self._check_end()
 
     def clear_previsu(self) -> None:
         """Discard the current previsualisation tiles."""
         self.previsualiation = []
 
     def end_turn(self) -> None:
-        """Advance one turn: tick HP/AP, refresh spells, spawn next flames."""
-        self.player.hp -= 1
+        """Advance one turn: refresh AP/spells and spawn the next wave.
+
+        Exactly ``constant.NB_WAVES`` distinct waves spawn over a game (one per
+        end-turn until the quota is reached, none after). Once every wave has
+        spawned, clearing all flames from the map wins the game.
+        """
         self.player.pa = self.player.base_PA
         for spell in self.player.spells:
             spell.next_turn()
-        if len(self.spawn_pattern) == 0:
-            return
-        for pos in self.spawn_pattern:
-            self.map.place_entity([pos], Flame(pos[0], pos[1]))
-        self.spawn_pattern = self.patterns.draw()
-        self.previsualiation = []
-        self.turn += 1
+        if self.spawn_pattern:
+            for pos in self.spawn_pattern:
+                self.map.place_entity([pos], Flame(pos[0], pos[1]))
+            self.waves_spawned += 1
+            self.turn += 1
+            self.spawn_pattern = (
+                self.patterns.draw()
+                if self.waves_spawned < constant.NB_WAVES
+                else []
+            )
+        self.clear_previsu()
+        self._check_end()
+
+    def _flames_remain(self) -> bool:
+        """Whether any flame is still on the map."""
+        return any(isinstance(case.entity, Flame)
+                   for case in self.map.cases.values())
+
+    def _check_end(self) -> None:
+        """Resolve win/loss: dead player loses; all waves cleared wins."""
+        if self.player.hp <= 0:
+            self.done = True
+        elif self.waves_spawned >= constant.NB_WAVES and \
+                not self._flames_remain():
+            self.done = True
+            self.won = True
 
     # def get_observation(self) -> dict:
     #     """Return a plain-dict snapshot of game state for a neural network.

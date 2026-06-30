@@ -26,7 +26,7 @@ where = ["."]
 include = ["src*"]
 
 [tool.setuptools.package-data]
-src = ["config/*.map", "sprites_png/*.png"]
+src = ["config/*.map", "sprites_png/*.png", "patterns/*.json"]
 
 # pygame may be absent from the env mypy runs in (and ships no stubs in some
 # builds); silence missing-import noise rather than failing the type check.

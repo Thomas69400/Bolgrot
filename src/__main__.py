@@ -89,9 +89,10 @@ def main() -> None:
         renderer.draw_hp_player(game.player)
         renderer.draw_ap_player(game.player)
 
-        if game.player.hp <= 0:
+        if game.done:
             running = False
-            print("Game Over: Player is dead.")
+            print("Victory: all flames cleared!" if game.won
+                  else "Game Over: Player is dead.")
         pygame.display.update()
         pygame.display.flip()
         clock.tick(60)
