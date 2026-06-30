@@ -357,9 +357,9 @@ class Spells(ABC):
                     if path is not None else None
             if new_case is None or new_case.case_type == CaseType.WALL:
                 continue
-            if isinstance(new_case.entity, Bolgrot):
+            if isinstance(new_case.entity, (Bolgrot, Flame)):
                 continue
-            elif isinstance(new_case.entity, (Flame, Player)) and killable:
+            elif isinstance(new_case.entity, Player) and killable:
                 if player is not None:
                     player.hp = 0
             elif new_case.entity is None:
